@@ -5,7 +5,8 @@
    "private": true,
    "scripts": {
       "dev": "bun run --hot index.ts",
-      "start": "bun run index.ts",
+      "start": "node dist/index.js",
+      "build": "esbuild index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --packages=external",
       "cf:dev": "bunx wrangler dev",
       "cf:deploy": "bunx wrangler deploy",
       "compile": "bun build ./index.ts --compile --bytecode --format=esm --outfile app-server",
@@ -17,9 +18,11 @@
       "push:sqlite": "bunx drizzle-kit push --config=drizzle.sqlite.config.ts"
    },
    "devDependencies": {
+      "@types/bcryptjs": "^3.0.0",
       "@types/bun": "latest",
       "@types/pg": "^8.15.2",
       "drizzle-kit": "^0.31.5",
+      "esbuild": "^0.28.2",
       "tsx": "^4.20.6",
       "typescript": "^5.8.2"
    },
@@ -33,8 +36,9 @@
       "@neondatabase/serverless": "^1.0.2",
       "@types/jsonwebtoken": "^9.0.9",
       "@types/mime-types": "^2.1.4",
+      "bcryptjs": "^3.0.3",
       "bullmq": "^5.55.0",
-      "diesel-core": "^3.5.0",
+      "diesel-core": "^3.5.1",
       "dotenv": "^17.2.3",
       "drizzle-orm": "^0.45.2",
       "ejs": "^3.1.10",

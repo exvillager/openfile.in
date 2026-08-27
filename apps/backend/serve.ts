@@ -1,4 +1,5 @@
 import { Pool } from 'pg'
+import { serve } from 'diesel-core/node'
 import { CONFIG } from '@/config'  // throws at import time if required env vars are missing
 import { createApp } from './app'
 
@@ -18,11 +19,9 @@ export async function startServer() {
     const app = createApp()
     const port = CONFIG.PORT || 8000
 
-    Bun.serve({
+    serve({
         port,
         fetch: app.fetch as any,
-        // key: Bun.file("./localhost.key"),
-        // cert: Bun.file("./localhost.crt"),
     })
 
     console.log(`Listening on http://localhost:${port}`)
