@@ -31,7 +31,9 @@ jobs:
 
       - name: Read backend version
         id: version
-        run: echo "version=$(jq -r .version apps/backend/package.json)" >> "$GITHUB_OUTPUT"
+        # The version lives in the root package.json; apps/backend/package.json
+        # has no version field, which tagged every image ":null".
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
