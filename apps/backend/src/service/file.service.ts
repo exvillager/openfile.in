@@ -80,7 +80,7 @@ export default class FileService implements IFileService {
         return new ApiResponse(201, 'File metadata stored and link updated.', {});
     }
 
-    getDownloadPreSignedUrl = async (userId: string, token: string, fileId: string, s3key: string) => {
+    getDownloadPreSignedUrl = async (userId: string, token: string, fileId: string) => {
         const link = await this.fileRepository.findLinkByTokenAndUserId(token, userId);
         if (!link) {
             throw new ApiError("Invalid link or unauthorized", 404);
@@ -99,8 +99,10 @@ export default class FileService implements IFileService {
             return new ApiResponse(200, 'URL generated successfully', { url })
         }
 
-        const url = await this.storageService.generateSignedDownloadUrl(s3key);
-        await redis.set(cacheKey, JSON.stringify({ url }), "EX", 3600);
+        const url = await this.storageService.generateSignedDownloadUrl(file.key);
+        // The signed URL itself is valid for 3600s, so cache it for less than that.
+        // Caching for the full 3600 handed the last callers a URL about to expire.
+        await redis.set(cacheKey, JSON.stringify({ url }), "EX", 3000);
 
         return new ApiResponse(200, 'URL generated successfully', { url })
     }

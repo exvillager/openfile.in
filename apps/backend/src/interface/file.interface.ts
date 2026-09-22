@@ -35,7 +35,7 @@ export type ExpiredPendingFile = {
 export interface IFileService {
     notifyUpload(params: NotifyUploadParams): Promise<ApiResponse>
     uploadPreSignedUrl(link: Link, mimeType: string, fileSize: number): Promise<ApiResponse>;
-    getDownloadPreSignedUrl(userId: string, token: string, fileId: string, s3key: string): Promise<ApiResponse>;
+    getDownloadPreSignedUrl(userId: string, token: string, fileId: string): Promise<ApiResponse>;
     storageUsed(userId: string): Promise<ApiResponse>
     getFilesByLinkAndToken(token: string, userId: string, page: number, limit: number, skip: number): Promise<ApiResponse>
     delete_a_file_from_a_link(link_id: string, file_id: string, user_id: string): Promise<ApiResponse>

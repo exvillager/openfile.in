@@ -87,14 +87,13 @@ export default class DieselFileController {
     getDownloadPresignedUrl = async (c: ContextType) => {
         const token = c.query?.token;
         const fileId = c.query?.fileId
-        const s3key = c.query?.s3key
 
-        if (!token || !s3key || !fileId) {
+        if (!token|| !fileId) {
             return c.json({ error: "Missing or invalid parameters" }, 400);
         }
         try {
             const user = mustGet<User>(c, 'user')
-            const apiRespone: ApiResponse = await this.fileService.getDownloadPreSignedUrl(user.id, token, fileId, s3key)
+            const apiRespone: ApiResponse = await this.fileService.getDownloadPreSignedUrl(user.id, token, fileId)
 
             return c.json(apiRespone, apiRespone.statusCode);
         } catch (error) {
