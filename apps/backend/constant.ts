@@ -10,6 +10,3 @@ export const UPLOAD_URL_TTL = 3600
 // Grace period added on top of UPLOAD_URL_TTL before a still-PENDING File row is
 // treated as abandoned. Covers a slow upload that started just before the URL expired.
 export const PENDING_UPLOAD_GRACE = 15 * 60
-
-// Rows pulled per iteration by the abandoned-upload sweep.
-export const PENDING_UPLOAD_BATCH_SIZE = 100
