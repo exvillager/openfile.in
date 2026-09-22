@@ -13,13 +13,18 @@ COPY apps/backend ./apps/backend
 WORKDIR /app/apps/backend
 
 RUN bun run compile
+RUN bun build ./scripts/migrate.ts --compile --outfile migrate
 
 FROM oven/bun:latest AS runner
 
 WORKDIR /app
 
 COPY --from=builder /app/apps/backend/app-server ./
+COPY --from=builder /app/apps/backend/migrate ./
+COPY --from=builder /app/apps/backend/drizzle ./drizzle
 
 EXPOSE 8000
 
-ENTRYPOINT ["./app-server"]
+# Apply pending migrations, then start the server. If a migration fails the
+# container exits instead of serving traffic against the wrong schema.
+ENTRYPOINT ["sh", "-c", "./migrate && exec ./app-server"]

@@ -11,7 +11,7 @@
       "compile": "bun build ./index.ts --compile --bytecode --format=esm --outfile app-server",
       "dev:local": "DB_CLIENT=sqlite bun run --hot index.ts",
       "generate": "bunx drizzle-kit generate",
-      "migrate": "bunx drizzle-kit migrate",
+      "migrate": "bun run scripts/migrate.ts",
       "generate:sqlite": "bunx drizzle-kit generate --config=drizzle.sqlite.config.ts",
       "migrate:sqlite": "bunx drizzle-kit migrate --config=drizzle.sqlite.config.ts",
       "push:sqlite": "bunx drizzle-kit push --config=drizzle.sqlite.config.ts"
