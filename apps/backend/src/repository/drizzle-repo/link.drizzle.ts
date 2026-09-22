@@ -230,6 +230,7 @@ export class LinkRepositoryDrizzle implements ILinkRepo {
             .findMany({
                 where: and(
                     eq(files.uploadLinkId, linkId),
+                    eq(files.status, 'CONFIRMED'),
                 ),
                 columns: {
                     id: true,

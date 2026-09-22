@@ -1,10 +1,11 @@
-import { links } from "../db";
+import { files, links } from "../db";
 import { ApiError } from "../utils/apiError"
 import ApiResponse from "../utils/apiRespone"
 import { CreateLinkBody } from "../zod/schema"
 import { UserWithPlan } from "./user.interface"
 
 export type Link = typeof links.$inferSelect
+type FileRow = typeof files.$inferSelect
 
 export interface ILinkRepo {
     findLinkByIdAndUser(linkId: string, userId: string): Promise<{
@@ -55,17 +56,7 @@ export interface ILinkRepo {
         updatedAt: Date;
     }>
 
-    findFilesForLink(linkId: string, userId: string): Promise<{
-        name: string;
-        userId: string;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        url: string;
-        size: bigint;
-        keyUsed: boolean;
-        uploadLinkId: string;
-    }[]>
+    findFilesForLink(linkId: string, userId: string): Promise<FileRow[]>
 
     deleteLink(linkId: string, userId: string): Promise<{
         token: string;
@@ -170,30 +161,7 @@ export interface ILinkRepo {
     expired_link_count(): Promise<number>
 
     find_expired_links(limit: number, offset: number):
-        Promise<({
-            files: {
-                name: string;
-                userId: string;
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                url: string;
-                size: bigint;
-                keyUsed: boolean;
-                uploadLinkId: string;
-            }[];
-        } & {
-            token: string;
-            expireAfterFirstUpload: boolean;
-            name: string | null;
-            userId: string;
-            id: string;
-            maxUploads: number;
-            uploadCount: number;
-            expiresAt: Date;
-            createdAt: Date;
-            updatedAt: Date;
-        })[]>
+        Promise<(Link & { files: FileRow[] })[]>
 
 }
 

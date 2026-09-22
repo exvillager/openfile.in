@@ -19,6 +19,9 @@ export interface IStorage {
         url: string;
         key: string;
     } | undefined>
+
+    /** Public object URL for a key. The inverse of extractKeyFromUrl(). */
+    getObjectUrl(key: string): string
     
     deleteFiles(files: { id: string, url: string }[]): Promise<boolean | undefined>
 }

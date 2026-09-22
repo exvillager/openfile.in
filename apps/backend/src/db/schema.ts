@@ -1,11 +1,14 @@
 // src/schema.ts
-import { pgTable, varchar, text, integer, boolean, bigint, timestamp, json, doublePrecision, pgEnum, uuid } from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, integer, boolean, bigint, timestamp, json, doublePrecision, pgEnum, uuid, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 
 // Enums
 export const subscriptionStatus = pgEnum("SubscriptionStatus", ["ACTIVE", "INACTIVE", "CANCELLED"]);
 export const deletedStatus = pgEnum("DeletedStatus", ["PENDING", "DELETED", "FAILED"]);
+// PENDING  -> a presigned upload URL was handed out, the client has not confirmed the upload yet.
+// CONFIRMED -> the client called notify-upload, the object is really in the bucket.
+export const fileStatus = pgEnum("FileStatus", ["PENDING", "CONFIRMED"]);
 
 // Users table
 export const users = pgTable("User", {
@@ -55,14 +58,22 @@ export const files = pgTable(
   {
     id: uuid("id").primaryKey().$defaultFn(() => uuidv7()),
     url: text("url").notNull(),
+    key: text("key").unique().notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     size: bigint("size", { mode: "bigint" }).notNull(),
     keyUsed: boolean("keyUsed").default(false).notNull(),
+    status: fileStatus("status").default("PENDING").notNull(),
+    // Deadline for the client to confirm the upload. Null once the file is CONFIRMED.
+    expiresAt: timestamp("expiresAt"),
     uploadLinkId: uuid("uploadLinkId").notNull().references(() => links.id, { onDelete: "cascade" }),
     userId: uuid("userId").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   },
+  (table) => [
+    // Drives the sweep for abandoned uploads.
+    index("File_status_expiresAt_idx").on(table.status, table.expiresAt),
+  ],
 );
 
 export const filesRelations = relations(files, ({ one }) => ({

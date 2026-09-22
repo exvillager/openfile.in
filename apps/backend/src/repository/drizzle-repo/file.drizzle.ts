@@ -1,7 +1,11 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 import { files, links } from "@/db";
-import { IFileRepo } from "@/interface/file.interface";
+import {
+    ConfirmUploadParams,
+    CreatePendingFileParams,
+    IFileRepo,
+} from "@/interface/file.interface";
 import { DrizzleClient } from "./user.drizzle";
 
 
@@ -21,19 +25,20 @@ export class FileRepositoryDrizzle implements IFileRepo {
         return FileRepositoryDrizzle.instance
     }
 
-    async createFileAndUpdateLink(
-        { linkId, userId, url, name, size }:
-            { linkId: string, userId: string, url: string, name: string, size: bigint }
-    ): ReturnType<IFileRepo['createFileAndUpdateLink']> {
-                console.log('creating file', name, size, userId, linkId)
-        const [createdFile] = await this
+    async createPendingFile(
+        { linkId, userId, url, key, size, expiresAt }: CreatePendingFileParams
+    ): ReturnType<IFileRepo['createPendingFile']> {
+        const [pendingFile] = await this
             .client
             .insert(files)
             .values({
                 id: uuidv7(),
                 url,
-                name,
+                key,
+                name: '',
                 size,
+                status: 'PENDING',
+                expiresAt,
                 userId,
                 uploadLinkId: linkId,
                 createdAt: new Date(),
@@ -41,8 +46,31 @@ export class FileRepositoryDrizzle implements IFileRepo {
             })
             .returning();
 
-        if (!createdFile) {
-            console.log('failed to create file')
+        return pendingFile ?? null;
+    }
+
+    async confirmUpload(
+        { key, linkId, userId, name, size }: ConfirmUploadParams
+    ): ReturnType<IFileRepo['confirmUpload']> {
+        const [confirmedFile] = await this
+            .client
+            .update(files)
+            .set({
+                name,
+                size,
+                status: 'CONFIRMED',
+                expiresAt: null,
+                updatedAt: new Date(),
+            })
+            .where(and(
+                eq(files.key, key),
+                eq(files.uploadLinkId, linkId),
+                eq(files.userId, userId),
+                eq(files.status, 'PENDING'),
+            ))
+            .returning();
+
+        if (!confirmedFile) {
             return [null, null];
         }
 
@@ -53,15 +81,14 @@ export class FileRepositoryDrizzle implements IFileRepo {
                 uploadCount: sql`${links.uploadCount}+1`,
             })
             .where(and(eq(links.id, linkId), eq(links.userId, userId)))
-
             .returning();
 
         if (!updatedLink) {
             console.log('failed to update link')
-            return [createdFile, null];
+            return [confirmedFile, null];
         }
 
-        return [createdFile, updatedLink];
+        return [confirmedFile, updatedLink];
     }
 
     async findFileByIdUserIdAndLinkId(fileId: string, userId: string, linkId: string) {
@@ -73,7 +100,8 @@ export class FileRepositoryDrizzle implements IFileRepo {
                 where: and(
                     eq(files.id, fileId),
                     eq(files.userId, userId),
-                    eq(files.uploadLinkId, linkId)
+                    eq(files.uploadLinkId, linkId),
+                    eq(files.status, 'CONFIRMED')
                 )
             })
 
@@ -103,7 +131,8 @@ export class FileRepositoryDrizzle implements IFileRepo {
             .findMany({
                 where: and(
                     eq(files.uploadLinkId, linkId),
-                    eq(files.userId, userId)
+                    eq(files.userId, userId),
+                    eq(files.status, 'CONFIRMED')
                 ),
                 offset: skip,
                 limit: limit,
@@ -132,7 +161,10 @@ export class FileRepositoryDrizzle implements IFileRepo {
                 totalSize: sql<number>`SUM(${files.size})`
             })
             .from(files)
-            .where(eq(files.userId, userId))
+            .where(and(
+                eq(files.userId, userId),
+                eq(files.status, 'CONFIRMED')
+            ))
             .limit(1)
         
         return result[0]
@@ -177,6 +209,43 @@ export class FileRepositoryDrizzle implements IFileRepo {
         //     .where(and(eq(links.id, link_id), eq(links.userId, user_id)))
 
         return deletedFile;
+    }
+
+    async find_expired_pending_files(limit: number) {
+        const result = await this
+            .client
+            .query
+            .files
+            .findMany({
+                where: and(
+                    eq(files.status, 'PENDING'),
+                    lt(files.expiresAt, new Date())
+                ),
+                columns: {
+                    id: true,
+                    url: true,
+                    uploadLinkId: true,
+                },
+                limit: limit,
+                orderBy: sql`${files.expiresAt} ASC`
+            })
+
+        return result;
+    }
+
+    async delete_pending_files_by_ids(ids: string[]) {
+        if (ids.length === 0) return [];
+
+        const deleted = await this
+            .client
+            .delete(files)
+            .where(and(
+                inArray(files.id, ids),
+                eq(files.status, 'PENDING')
+            ))
+            .returning({ id: files.id });
+
+        return deleted.map(row => row.id);
     }
 }
 

@@ -11,6 +11,7 @@ import { Readable } from "stream";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getKey } from "../utils/helper";
 import { extractKeyFromUrl, IStorage } from "../interface/storage.interface";
+import { UPLOAD_URL_TTL } from "../../constant";
 
 export class S3Service implements IStorage {
     private client: S3Client;
@@ -41,6 +42,10 @@ export class S3Service implements IStorage {
         return this.instanceName
     }
 
+    getObjectUrl(key: string): string {
+        return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    }
+
     public async uploadFile(file: File) {
         const key = getKey(file.type);
         const upload = new Upload({
@@ -53,8 +58,7 @@ export class S3Service implements IStorage {
             },
         });
         await upload.done();
-        const url = `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-        return { url, key };
+        return { url: this.getObjectUrl(key), key };
     }
 
     public async uploadStream(stream: Readable, contentType: string) {
@@ -69,8 +73,7 @@ export class S3Service implements IStorage {
             },
         });
         await upload.done();
-        const url = `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-        return { url, key };
+        return { url: this.getObjectUrl(key), key };
     }
 
     public async generateSignedDownloadUrl(key: string) {
@@ -86,7 +89,7 @@ export class S3Service implements IStorage {
                 Key: key,
                 ContentType: mimeType,
             });
-            const url = await getSignedUrl(this.client as any, cmd, { expiresIn: 3600 });
+            const url = await getSignedUrl(this.client as any, cmd, { expiresIn: UPLOAD_URL_TTL });
             return { url, key };
         } catch (error) {
             console.error("Error generating presigned upload URL:", error);

@@ -21,5 +21,6 @@ export const authService = AuthService.getInstance(notificationService, userRepo
 export const cleanupService = CleanupService.getInstance(
     linkRepository,
     deletedFileRepository,
+    fileRepository,
     cacheService
 );
