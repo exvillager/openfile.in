@@ -3,7 +3,6 @@ import { IFileService } from "../../interface/file.interface";
 import { handleErrorResponse } from "../../utils/handle-error";
 import ApiResponse from "../../utils/apiRespone";
 import { notifyUploadSchema } from "../../zod/schema";
-import { HTTPException } from "diesel-core/http-exception";
 import { User } from "../../interface/user.interface";
 import { Link } from "../../interface/link.interface";
 import { mustGet } from "../../utils/mustGet";
@@ -73,15 +72,15 @@ export default class DieselFileController {
 
     getUploadPresignedUrl = async (c: ContextType) => {
         try {
+            const link = mustGet<Link>(c, 'link')
             const safeMimeType = mustGet<string>(c, 'mimeType')
+            const fileSize = mustGet<number>(c, 'fileSize')
 
-            const res: ApiResponse = await this.fileService.uploadPreSignedUrl(safeMimeType)
+            const res: ApiResponse = await this.fileService.uploadPreSignedUrl(link, safeMimeType, fileSize)
             return c.json(res.data, res.statusCode);
         } catch (error) {
-            // console.log('upload url error ', error)
-            throw new HTTPException(500, {
-                message: "Internal Server Error in getUploadPresignedUrl",
-            })
+            console.error("getUploadPresignedUrl error:", error);
+            return handleErrorResponse(c, error)
         }
     }
 

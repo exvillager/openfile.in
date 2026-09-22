@@ -5,7 +5,9 @@ import { ILinkRepo } from "../interface/link.interface";
 import { IDeleteFileRepo } from "../interface/delete-file.interface";
 import { deleteFiles } from "../queue/bullmq/workers/delete-files.worker";
 import { ICache } from "../interface/cache.interface";
+import { IFileRepo } from "../interface/file.interface";
 import { redis } from "../config/redis";
+import { PENDING_UPLOAD_BATCH_SIZE } from "../../constant";
 
 export default class CleanupService {
     private static instance: CleanupService;
@@ -13,16 +15,18 @@ export default class CleanupService {
     constructor(
         private linkRepository: ILinkRepo,
         private deletedFileRepo: IDeleteFileRepo,
+        private fileRepository: IFileRepo,
         private cache: ICache
     ) {}
 
     public static getInstance(
         linkRepository: ILinkRepo,
         deletedFileRepo: IDeleteFileRepo,
+        fileRepository: IFileRepo,
         cache: ICache
     ): CleanupService {
         if (!CleanupService.instance) {
-            CleanupService.instance = new CleanupService(linkRepository, deletedFileRepo, cache);
+            CleanupService.instance = new CleanupService(linkRepository, deletedFileRepo, fileRepository, cache);
         }
         return CleanupService.instance;
     }
@@ -90,6 +94,13 @@ export default class CleanupService {
      */
     public runFileRecoveryInterval = (interval = "10m") => {
         return this.runTaskInterval("requeue-pending-failed-files", this.requeuePendingAndFailedFiles, interval);
+    };
+
+    /**
+     * Schedules periodic cleanup of uploads that were presigned but never confirmed.
+     */
+    public runAbandonedUploadCleanupInterval = (interval = "10m") => {
+        return this.runTaskInterval("cleanup-abandoned-uploads", this.cleanupAbandonedUploads, interval);
     };
 
     // Backward compatibility alias for runLinkCleanupInterval
@@ -182,6 +193,85 @@ export default class CleanupService {
             }
         } catch (error) {
             console.error(`[Recovery] Error requeuing ${status} files:`, error);
+        }
+    };
+
+    /**
+     * Sweeps File rows that were reserved for a presigned upload and never confirmed.
+     *
+     * A row goes PENDING when /upload-url hands out a presigned PUT and CONFIRMED when
+     * the client calls /notify-upload. If the client uploads the object and then walks
+     * away, nothing ever confirms it -- the object sits in the bucket and is billed
+     * forever. Once the reservation's expiresAt has passed, the object is presumed
+     * orphaned and goes through the same delete pipeline as any other removed file.
+     *
+     * Reads a batch at a time and always re-reads from the head, because each batch is
+     * deleted before the next read.
+     */
+    public cleanupAbandonedUploads = async () => {
+        // Bounds the sweep so one run cannot spin on a backlog (or on rows that keep
+        // failing to delete) and hold the distributed lock past its TTL.
+        const MAX_BATCHES = 50;
+
+        try {
+            let swept = 0;
+
+            for (let batch = 0; batch < MAX_BATCHES; batch++) {
+                const expired = await this.fileRepository.find_expired_pending_files(PENDING_UPLOAD_BATCH_SIZE);
+
+                if (expired.length === 0) break;
+
+                // Only sweep rows we actually managed to delete. A row confirmed between
+                // the read and the delete stays put, and we must not queue it for S3
+                // deletion -- it is a real file now.
+                const deletedIds = new Set(
+                    await this.fileRepository.delete_pending_files_by_ids(expired.map(file => file.id))
+                );
+                const reclaimed = expired.filter(file => deletedIds.has(file.id));
+
+                if (reclaimed.length === 0) {
+                    // Everything in this batch was confirmed out from under us. Nothing
+                    // left to do, and re-reading would return the same rows.
+                    break;
+                }
+
+                // The delete worker is driven per link, so group before enqueueing.
+                const grouped = new Map<string, { id: string; url: string }[]>();
+                for (const file of reclaimed) {
+                    const group = grouped.get(file.uploadLinkId) || [];
+                    group.push({ id: file.id, url: file.url });
+                    grouped.set(file.uploadLinkId, group);
+                }
+
+                for (const [linkId, groupedFiles] of grouped) {
+                    try {
+                        // Tracking rows first: if the enqueue below is lost, the recovery
+                        // sweep picks these up as PENDING deletions and retries.
+                        await this.deletedFileRepo.createMany(groupedFiles, linkId);
+                        await deleteQueue.add('delete-queue', { linkId, files: groupedFiles });
+                    } catch (error) {
+                        // The File rows are already gone, so nothing will reference these
+                        // keys again. Log them so they can be reclaimed by hand.
+                        console.error(
+                            `[Cleanup] Failed to queue abandoned uploads for link ${linkId}. Orphaned objects:`,
+                            groupedFiles.map(file => file.url),
+                            error
+                        );
+                    }
+                }
+
+                swept += reclaimed.length;
+                console.log(`[Cleanup] Reclaimed ${reclaimed.length} abandoned uploads.`);
+
+                // A short batch means we have drained the backlog.
+                if (expired.length < PENDING_UPLOAD_BATCH_SIZE) break;
+            }
+
+            if (swept > 0) {
+                console.log(`[Cleanup] Queued ${swept} abandoned uploads for deletion.`);
+            }
+        } catch (error) {
+            console.error('[Cleanup] Error while cleaning up abandoned uploads:', error);
         }
     };
 

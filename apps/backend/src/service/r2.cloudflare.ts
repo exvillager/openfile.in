@@ -4,6 +4,7 @@ import { DeleteObjectsCommand, GetObjectCommand, PutObjectCommand, S3Client } fr
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getKey } from "../utils/helper";
 import { Upload } from "@aws-sdk/lib-storage";
+import { UPLOAD_URL_TTL } from "../../constant";
 
 
 export class R2StorageService implements IStorage {
@@ -35,6 +36,13 @@ export class R2StorageService implements IStorage {
         return this.Instancename
     }
 
+    // NOTE: this deliberately keeps the S3-shaped host every File row in the DB
+    // already uses. Only the path matters -- extractKeyFromUrl() reads the key
+    // back off it, and that is what deletes are issued against.
+    getObjectUrl(key: string): string {
+        return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    }
+
     async generateSignedDownloadUrl(key: string) {
         const cmd = new GetObjectCommand({ Bucket: this.bucket, Key: key })
         return await getSignedUrl(this.client, cmd, { expiresIn: 3600 })
@@ -47,7 +55,7 @@ export class R2StorageService implements IStorage {
             Key: key,
             ContentType: mimeType,
         });
-        const url = await getSignedUrl(this.client, cmd, { expiresIn: 3600 });
+        const url = await getSignedUrl(this.client, cmd, { expiresIn: UPLOAD_URL_TTL });
 
         return { url, key };
     }
@@ -64,8 +72,7 @@ export class R2StorageService implements IStorage {
             },
         });
         await upload.done();
-        const url = `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-        return { url, key };
+        return { url: this.getObjectUrl(key), key };
     }
 
     async uploadStream(stream: Readable, contentType: string) {
@@ -80,8 +87,7 @@ export class R2StorageService implements IStorage {
             },
         });
         await upload.done();
-        const url = `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-        return { url, key };
+        return { url: this.getObjectUrl(key), key };
     }
 
     async deleteFiles(files: { id: string, url: string }[]) {

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, blob } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, blob, index } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
 
@@ -42,14 +42,19 @@ export const linksRelations = relations(links, ({ one, many }) => ({
 export const files = sqliteTable("File", {
   id: text("id").primaryKey().$defaultFn(() => uuidv7()),
   url: text("url").notNull(),
+  key: text("key").unique().notNull(),
   name: text("name").notNull(),
   size: blob("size", { mode: 'bigint' }).notNull(),
   keyUsed: integer("keyUsed", { mode: 'boolean' }).default(false).notNull(),
+  status: text("status", { enum: ["PENDING", "CONFIRMED"] }).default("PENDING").notNull(),
+  expiresAt: integer("expiresAt", { mode: 'timestamp' }),
   uploadLinkId: text("uploadLinkId").notNull(),
   userId: text("userId").notNull(),
   createdAt: integer("createdAt", { mode: 'timestamp' }).$defaultFn(() => new Date()).notNull(),
   updatedAt: integer("updatedAt", { mode: 'timestamp' }).$defaultFn(() => new Date()).notNull(),
-});
+}, (table) => [
+  index("File_status_expiresAt_idx").on(table.status, table.expiresAt),
+]);
 
 export const filesRelations = relations(files, ({ one }) => ({
   uploadLink: one(links, { fields: [files.uploadLinkId], references: [links.id] }),

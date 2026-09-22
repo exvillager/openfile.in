@@ -3,9 +3,10 @@ import { ApiError } from "../utils/apiError";
 import ApiResponse from "../utils/apiRespone";
 import { IFileRepo, IFileService, NotifyUploadParams } from "../interface/file.interface";
 import { IStorage } from "../interface/storage.interface";
-import { ILinkRepo } from "../interface/link.interface";
+import { ILinkRepo, Link } from "../interface/link.interface";
 import { IDeleteFileRepo } from "../interface/delete-file.interface";
 import { deleteQueue } from "../queue/bullmq/queue/delete-files.queue";
+import { PENDING_UPLOAD_GRACE, UPLOAD_URL_TTL } from "../../constant";
 
 export default class FileService implements IFileService {
     private static instance: FileService
@@ -24,33 +25,59 @@ export default class FileService implements IFileService {
         return FileService.instance;
     }
 
-    notifyUpload = async ({ link, s3Key, fileSize, name }: NotifyUploadParams) => {
 
-        const user = await this.fileRepository.getUser(link.userId);
-        if (!user) {
-            throw new ApiError('User not found', 404)
+    uploadPreSignedUrl = async (link: Link, mimeType: string, fileSize: number) => {
+        const presigned = await this.storageService.generatePresignedUploadUrl(mimeType);
+        if (!presigned) {
+            throw new ApiError('Failed to generate upload URL.', 500)
         }
 
-        const url = `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
-        const [fileRes, linkRes] = await this.fileRepository.createFileAndUpdateLink({
+        const { url, key } = presigned;
+
+        // create expiresAt so later we can delete pending files if they are expired.
+        const expiresAt = new Date(Date.now() + (UPLOAD_URL_TTL + PENDING_UPLOAD_GRACE) * 1000);
+
+        const pendingFile = await this.fileRepository.createPendingFile({
             linkId: link.id,
-            userId: user.id,
-            url,
+            userId: link.userId,
+            url: this.storageService.getObjectUrl(key),
+            key,
+            size: BigInt(fileSize),
+            expiresAt,
+        })
+
+        // Refuse to leak an untracked key into the bucket.
+        if (!pendingFile) {
+            throw new ApiError('Failed to reserve the upload.', 500)
+        }
+
+        return new ApiResponse(200, 'URL generated successfully', { url, key })
+    }
+
+    /**
+     * Confirms the reservation created by uploadPreSignedUrl. This is the only place a
+     * file becomes visible to the rest of the app.
+     */
+    notifyUpload = async ({ link, s3Key, fileSize, name }: NotifyUploadParams) => {
+        const [fileRes, linkRes] = await this.fileRepository.confirmUpload({
+            key: s3Key,
+            linkId: link.id,
+            userId: link.userId,
             name: name ?? '',
             size: BigInt(fileSize),
         })
 
-        if (!fileRes || !linkRes) {
+        // No PENDING row for this key on this link: the key was never issued here, it was
+        // already confirmed, or the sweep reclaimed it after the deadline passed.
+        if (!fileRes) {
+            throw new ApiError('No pending upload found for this key.', 404)
+        }
+
+        if (!linkRes) {
             throw new ApiError("Partial failure updating DB.", 500)
         }
 
         return new ApiResponse(201, 'File metadata stored and link updated.', {});
-    }
-
-
-    uploadPreSignedUrl = async (mimeType: string) => {
-        const { url, key } = await this.storageService.generatePresignedUploadUrl(mimeType);
-        return new ApiResponse(200, 'URL generated successfully', { url, key })
     }
 
     getDownloadPreSignedUrl = async (userId: string, token: string, fileId: string, s3key: string) => {

@@ -178,6 +178,7 @@ export class DieselMiddlewares {
 
 
             c.set('mimeType', mimeType)
+            c.set('fileSize', fileSize)
 
         } catch (error: any) {
             if (error?.name === "HTTPException") throw error;
