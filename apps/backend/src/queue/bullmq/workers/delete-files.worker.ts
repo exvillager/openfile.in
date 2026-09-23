@@ -37,8 +37,15 @@ export async function deleteFiles(files: FileItem[], linkId: string) {
     for (const file of files) {
         try {
 
-            await storageService.deleteFiles([{ id: file.id, url: file.url }])
-            redis.del(`signed-url:${file.id}`)
+            // deleteFiles reports failure by returning false rather than throwing. Throw here
+            // so the row is marked FAILED and the recovery sweep retries it.
+            const deleted = await storageService.deleteFiles([{ id: file.id, url: file.url }])
+            if (deleted === false) {
+                throw new Error(`Storage delete failed for ${file.url}`)
+            }
+            redis.del(`signed-url:${file.id}`).catch((err) => {
+                console.error(`Failed to delete redis cache for file ${file.id}:`, err)
+            })
             updatePromises.push(
                 db
                     .update(deletedFiles)
@@ -51,8 +58,7 @@ export async function deleteFiles(files: FileItem[], linkId: string) {
                     )
 
             );
-        } catch (err) {
-            console.log(`File not found in S3: ${file.url}, marking as deleted`);
+        } catch (err:any) {
             if (
                 err.code === "NoSuchKey" ||
                 err.statusCode === 404 ||
