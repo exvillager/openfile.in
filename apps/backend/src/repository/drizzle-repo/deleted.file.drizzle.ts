@@ -34,6 +34,7 @@ export class DeletedFileRepositoryDrizzle implements IDeleteFileRepo {
                     updatedAt: new Date(),
                 }))
             )
+            .onConflictDoNothing({ target: deletedFiles.fileId })
             .returning();
         return result;
     }

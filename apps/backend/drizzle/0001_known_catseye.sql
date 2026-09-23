@@ -1,0 +1,1 @@
+ALTER TABLE "DeletedFile" ADD CONSTRAINT "DeletedFile_fileId_unique" UNIQUE("fileId");

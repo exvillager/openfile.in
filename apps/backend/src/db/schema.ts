@@ -107,7 +107,8 @@ export const deletedFiles = pgTable(
   "DeletedFile",
   {
     id: uuid("id").primaryKey().$defaultFn(() => uuidv7()),
-    fileId: uuid("fileId").notNull(),
+    // One delete record per file, so a sweep that runs twice cannot insert it again.
+    fileId: uuid("fileId").notNull().unique(),
     linkId: uuid("linkId").notNull(),
     fileUrl: text("fileUrl").notNull(),
     status: deletedStatus("status").default("PENDING").notNull(),
