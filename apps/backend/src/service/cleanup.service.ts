@@ -226,8 +226,10 @@ export default class CleanupService {
                     // Delete from the actual file table.
                     await this.fileRepository.delete_pending_files_by_ids(groupedFiles.map(file => file.id));
 
-                    // Now delete the Actual file Object
-                    await deleteQueue.add('delete-queue', { linkId, files: groupedFiles });
+                    // Now delete the Actual file Object. Not awaited: the deletedFile rows above
+                    // are the source of truth, and the recovery sweep requeues them if this fails.
+                    deleteQueue.add('delete-queue', { linkId, files: groupedFiles })
+                        .catch(err => console.error('[Cleanup] Enqueue failed, recovery will retry:', err));
                 }
 
                 console.log(`[Cleanup] Removed ${abondonedFiles.length} abondoned files.`);
@@ -263,13 +265,15 @@ export default class CleanupService {
 
                     if (fileUrls.length > 0) {
                         await this.deletedFileRepo.createMany(files, link.id);
-                        await deleteQueue.add('delete-queue', {
+                        // Not awaited: an enqueue failure must not stop the link being deleted
+                        // (that re-inserts the deletedFile rows next tick). Recovery requeues them.
+                        deleteQueue.add('delete-queue', {
                             linkId: link.id,
                             files: files.map(file => ({
                                 id: file.id,
                                 url: file.url
                             }))
-                        });
+                        }).catch(err => console.error('[Cleanup] Enqueue failed, recovery will retry:', err));
                     }
 
                     await this.linkRepository.delete_link_by_id(link.id);
