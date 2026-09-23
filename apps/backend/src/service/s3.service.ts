@@ -81,15 +81,21 @@ export class S3Service implements IStorage {
         return await getSignedUrl(this.client as any, cmd, { expiresIn: 3600 });
     }
 
-    public async generatePresignedUploadUrl(mimeType: string) {
+    public async generatePresignedUploadUrl(mimeType: string, fileSize: number) {
         try {
             const key = getKey(mimeType);
             const cmd = new PutObjectCommand({
                 Bucket: this.bucket,
                 Key: key,
                 ContentType: mimeType,
+                ContentLength: fileSize,
             });
-            const url = await getSignedUrl(this.client as any, cmd, { expiresIn: UPLOAD_URL_TTL });
+            // Signing content-length pins the upload to exactly fileSize bytes; any
+            // other body size fails the signature check and the PUT is rejected.
+            const url = await getSignedUrl(this.client as any, cmd, {
+                expiresIn: UPLOAD_URL_TTL,
+                signableHeaders: new Set(["content-length", "content-type"]),
+            });
             return { url, key };
         } catch (error) {
             console.error("Error generating presigned upload URL:", error);

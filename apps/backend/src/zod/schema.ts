@@ -48,7 +48,7 @@ export const uploadRequestSchema = z.object({
     fileSize: z.number({
         required_error: "File size is required.",
         invalid_type_error: "File size must be a number."
-    }).positive("File size must be greater than zero.")
+    }).int("File size must be a whole number of bytes.").positive("File size must be greater than zero.")
 })
 
 export const notifyUploadSchema = z.object({

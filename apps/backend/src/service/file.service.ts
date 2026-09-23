@@ -27,7 +27,7 @@ export default class FileService implements IFileService {
 
 
     uploadPreSignedUrl = async (link: Link, mimeType: string, fileSize: number) => {
-        const presigned = await this.storageService.generatePresignedUploadUrl(mimeType);
+        const presigned = await this.storageService.generatePresignedUploadUrl(mimeType, fileSize);
         if (!presigned) {
             throw new ApiError('Failed to generate upload URL.', 500)
         }

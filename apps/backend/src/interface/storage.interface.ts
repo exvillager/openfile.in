@@ -15,7 +15,7 @@ export interface IStorage {
     
     generateSignedDownloadUrl(key: string): Promise<string>
     
-    generatePresignedUploadUrl(mimeType: string): Promise<{
+    generatePresignedUploadUrl(mimeType: string, fileSize: number): Promise<{
         url: string;
         key: string;
     } | undefined>

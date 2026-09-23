@@ -94,11 +94,11 @@ function UploadPage() {
     if (status?.status === "done") return;
     try {
       const mimeType = file.type || 'application/octet-stream';
-      const { url, key: s3Key } = await getUploadUrl(mimeType, token, file.size);
+      // Encrypt first: the upload URL is signed for the exact ciphertext size.
       const encryptedBlob = await encryptFileWithWorker(file, key, iv);
-      const encryptedFile = new File([encryptedBlob], file.name, { type: file.type });
+      const { url, key: s3Key } = await getUploadUrl(mimeType, token, encryptedBlob.size);
       await uploadFilesMutation({ encryptFile: encryptedBlob, type: mimeType, url, name: file.name });
-      await UpdateDbS3({ s3Key, size: encryptedFile.size, token, filename: file.name });
+      await UpdateDbS3({ s3Key, size: encryptedBlob.size, token, filename: file.name });
       updateStatus(file.name, "done");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
