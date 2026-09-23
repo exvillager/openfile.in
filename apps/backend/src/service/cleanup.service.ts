@@ -1,5 +1,5 @@
 import { cleanupQueue } from "../queue/bullmq/queue/cleanup-queue";
-import { deleteQueue } from "../queue/bullmq/queue/delete-files.queue";
+import { enqueueFileDeletes } from "../queue/bullmq/queue/delete-files.queue";
 import { Job, Worker } from "bullmq";
 import { ILinkRepo } from "../interface/link.interface";
 import { IDeleteFileRepo } from "../interface/delete-file.interface";
@@ -138,7 +138,7 @@ export default class CleanupService {
             {
                 connection: redis as any,
                 maxStalledCount: 2,
-                limiter: { max: 5, duration: 1000 },
+                limiter: { max: 20, duration: 1000 },
                 concurrency: 3
             }
         );
@@ -183,7 +183,7 @@ export default class CleanupService {
                 }
 
                 for (const [linkId, groupedFiles] of grouped) {
-                    await deleteQueue.add('delete-queue', { linkId, files: groupedFiles });
+                    await enqueueFileDeletes(linkId, groupedFiles);
                 }
 
                 total = total - limit;
@@ -228,7 +228,7 @@ export default class CleanupService {
 
                     // Now delete the Actual file Object. Not awaited: the deletedFile rows above
                     // are the source of truth, and the recovery sweep requeues them if this fails.
-                    deleteQueue.add('delete-queue', { linkId, files: groupedFiles })
+                    enqueueFileDeletes(linkId, groupedFiles)
                         .catch(err => console.error('[Cleanup] Enqueue failed, recovery will retry:', err));
                 }
 
@@ -242,7 +242,7 @@ export default class CleanupService {
     };
 
     /**
-     * Sweeps database for expired links, records files into deleted_files, enqueues to deleteQueue, and deletes link.
+     * Sweeps database for expired links, records files into deleted_files, enqueues the file deletes, and deletes link.
      */
     public cleanupExpiredLinks = async () => {
         try {
@@ -267,13 +267,7 @@ export default class CleanupService {
                         await this.deletedFileRepo.createMany(files, link.id);
                         // Not awaited: an enqueue failure must not stop the link being deleted
                         // (that re-inserts the deletedFile rows next tick). Recovery requeues them.
-                        deleteQueue.add('delete-queue', {
-                            linkId: link.id,
-                            files: files.map(file => ({
-                                id: file.id,
-                                url: file.url
-                            }))
-                        }).catch(err => console.error('[Cleanup] Enqueue failed, recovery will retry:', err));
+                        enqueueFileDeletes(link.id, files).catch(err => console.error('[Cleanup] Enqueue failed, recovery will retry:', err));
                     }
 
                     await this.linkRepository.delete_link_by_id(link.id);

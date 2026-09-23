@@ -5,7 +5,7 @@ import { IFileRepo, IFileService, NotifyUploadParams } from "../interface/file.i
 import { IStorage } from "../interface/storage.interface";
 import { ILinkRepo, Link } from "../interface/link.interface";
 import { IDeleteFileRepo } from "../interface/delete-file.interface";
-import { deleteQueue } from "../queue/bullmq/queue/delete-files.queue";
+import { enqueueFileDeletes } from "../queue/bullmq/queue/delete-files.queue";
 import { PENDING_UPLOAD_GRACE, UPLOAD_URL_TTL } from "../../constant";
 
 export default class FileService implements IFileService {
@@ -168,10 +168,7 @@ export default class FileService implements IFileService {
         }
 
         // 3. Dispatch background worker job for S3 cleanup (if this fails, recovery worker will retry PENDING state)
-        await deleteQueue.add('delete-queue', {
-            linkId: link.id,
-            files: [{ id: file.id, url: file.url }]
-        });
+        await enqueueFileDeletes(link.id, [{ id: file.id, url: file.url }]);
 
         // 4. Safely clear redis cache
         redis.del(`signed-url:${file.id}`).catch((err) => {

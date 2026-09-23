@@ -2,7 +2,7 @@ import { uuidv7 } from "uuidv7"
 import { ApiError } from "../utils/apiError";
 import ApiResponse from "../utils/apiRespone";
 import { getFinalLinkExpiration } from "../utils/getLinkExpiration";
-import { deleteQueue } from "../queue/bullmq/queue/delete-files.queue";
+import { enqueueFileDeletes } from "../queue/bullmq/queue/delete-files.queue";
 import { ILinkRepo, ILinkService } from "../interface/link.interface";
 import { IDeleteFileRepo } from "../interface/delete-file.interface";
 import { RedisCache } from "./cache.service";
@@ -161,13 +161,7 @@ export default class LinkService implements ILinkService {
 
             await this.deletedFileRepository.createMany(files, link.id)
 
-            await deleteQueue.add('delete-queue', {
-                linkId: link.id,
-                files: files.map(file => ({
-                    id: file.id,
-                    url: file.url
-                }))
-            });
+            await enqueueFileDeletes(link.id, files);
         }
 
         await this.linkRepository.deleteLink(link.id, userId)
