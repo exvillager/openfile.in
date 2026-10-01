@@ -12,6 +12,10 @@ import (
 func main() {
 	cfg := config.Load()
 
+	if err := db.Migrate(cfg.DatabaseURL); err != nil {
+		log.Fatalf("db migrate: %v", err)
+	}
+
 	ctx := context.Background()
 
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
