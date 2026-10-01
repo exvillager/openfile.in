@@ -32,16 +32,19 @@ CREATE TABLE "Link" (
 CREATE TABLE "File" (
     id uuid PRIMARY KEY,
     url text NOT NULL,
+    key text NOT NULL UNIQUE,
     name varchar(255) NOT NULL,
     size bigint NOT NULL,
     "keyUsed" boolean NOT NULL DEFAULT false,
-    status "FileStatus" DEFAULT 'PENDING',
-    expiresAt timestamp DEFAULT now(),
+    status "FileStatus" NOT NULL DEFAULT 'PENDING',
+    "expiresAt" timestamp,
     "uploadLinkId" uuid NOT NULL REFERENCES "Link" (id) ON DELETE CASCADE,
     "userId" uuid NOT NULL,
     "createdAt" timestamp NOT NULL DEFAULT now(),
     "updatedAt" timestamp NOT NULL DEFAULT now()
 );
+
+CREATE INDEX "File_status_expiresAt_idx" ON "File" (status, "expiresAt");
 
 CREATE TABLE "Subscription" (
     id uuid PRIMARY KEY,
@@ -58,7 +61,7 @@ CREATE TABLE "Subscription" (
 
 CREATE TABLE "DeletedFile" (
     id uuid PRIMARY KEY,
-    "fileId" uuid NOT NULL,
+    "fileId" uuid NOT NULL UNIQUE,
     "linkId" uuid NOT NULL,
     "fileUrl" text NOT NULL,
     status "DeletedStatus" NOT NULL DEFAULT 'PENDING',

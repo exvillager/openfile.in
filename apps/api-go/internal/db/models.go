@@ -153,11 +153,12 @@ type DeletedFile struct {
 type File struct {
 	ID           pgtype.UUID      `json:"id"`
 	Url          string           `json:"url"`
+	Key          string           `json:"key"`
 	Name         string           `json:"name"`
 	Size         int64            `json:"size"`
 	KeyUsed      bool             `json:"keyUsed"`
-	Status       *FileStatus      `json:"status"`
-	Expiresat    pgtype.Timestamp `json:"expiresat"`
+	Status       FileStatus       `json:"status"`
+	ExpiresAt    pgtype.Timestamp `json:"expiresAt"`
 	UploadLinkId pgtype.UUID      `json:"uploadLinkId"`
 	UserId       pgtype.UUID      `json:"userId"`
 	CreatedAt    pgtype.Timestamp `json:"createdAt"`
