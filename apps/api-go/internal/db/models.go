@@ -54,6 +54,48 @@ func (ns NullDeletedStatus) Value() (driver.Value, error) {
 	return string(ns.DeletedStatus), nil
 }
 
+type FileStatus string
+
+const (
+	FileStatusPENDING   FileStatus = "PENDING"
+	FileStatusCONFIRMED FileStatus = "CONFIRMED"
+)
+
+func (e *FileStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = FileStatus(s)
+	case string:
+		*e = FileStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for FileStatus: %T", src)
+	}
+	return nil
+}
+
+type NullFileStatus struct {
+	FileStatus FileStatus `json:"FileStatus"`
+	Valid      bool       `json:"valid"` // Valid is true if FileStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullFileStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.FileStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.FileStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullFileStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.FileStatus), nil
+}
+
 type SubscriptionStatus string
 
 const (
@@ -114,6 +156,8 @@ type File struct {
 	Name         string           `json:"name"`
 	Size         int64            `json:"size"`
 	KeyUsed      bool             `json:"keyUsed"`
+	Status       *FileStatus      `json:"status"`
+	Expiresat    pgtype.Timestamp `json:"expiresat"`
 	UploadLinkId pgtype.UUID      `json:"uploadLinkId"`
 	UserId       pgtype.UUID      `json:"userId"`
 	CreatedAt    pgtype.Timestamp `json:"createdAt"`

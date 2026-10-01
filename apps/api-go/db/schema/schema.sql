@@ -1,9 +1,7 @@
--- Mirrors apps/backend/src/db/schema.ts (drizzle). This is the schema sqlc
--- reads to type-check queries — it is not run as a migration. The actual
--- database is migrated from the TS backend via drizzle-kit.
 
 CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'CANCELLED');
 CREATE TYPE "DeletedStatus" AS ENUM ('PENDING', 'DELETED', 'FAILED');
+CREATE TYPE "FileStatus" AS ENUM ('PENDING', 'CONFIRMED');
 
 CREATE TABLE "User" (
     id uuid PRIMARY KEY,
@@ -37,6 +35,8 @@ CREATE TABLE "File" (
     name varchar(255) NOT NULL,
     size bigint NOT NULL,
     "keyUsed" boolean NOT NULL DEFAULT false,
+    status "FileStatus" DEFAULT 'PENDING',
+    expiresAt timestamp DEFAULT now(),
     "uploadLinkId" uuid NOT NULL REFERENCES "Link" (id) ON DELETE CASCADE,
     "userId" uuid NOT NULL,
     "createdAt" timestamp NOT NULL DEFAULT now(),
