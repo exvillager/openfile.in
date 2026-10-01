@@ -43,7 +43,7 @@
       "jsonwebtoken": "^9.0.2",
       "k6": "^0.0.0",
       "mime-types": "^3.0.1",
-      "nodemailer": "^9.0.1",
+      "nodemailer": "^10.0.13",
       "pg": "^8.16.3",
       "pino": "^9.9.5",
       "pino-daily-rotate-file": "^0.0.1",
