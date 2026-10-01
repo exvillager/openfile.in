@@ -1,6 +1,6 @@
 package response
 
-// ApiError is a handler/service-level error carrying an HTTP status code.
+// ApiError is a controller/service-level error carrying an HTTP status code.
 // It implements the standard `error` interface, so it can be returned
 // directly from any nanoserve.HandlerFunction.
 type ApiError struct {

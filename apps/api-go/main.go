@@ -5,8 +5,10 @@ import (
 	"log"
 
 	"github.com/exvillager/openfile.in/internal/config"
+	"github.com/exvillager/openfile.in/internal/controller"
 	"github.com/exvillager/openfile.in/internal/db"
 	"github.com/exvillager/openfile.in/internal/router"
+	"github.com/exvillager/openfile.in/internal/service"
 )
 
 func main() {
@@ -29,7 +31,11 @@ func main() {
 	}
 
 	queries := db.New(pool)
-	app := router.New(queries)
+
+	app := router.New(router.Controllers{
+		Health: controller.NewHealthController(service.NewHealthService(queries)),
+		Auth:   controller.NewAuthController(service.NewAuthService(queries)),
+	})
 
 	log.Printf("listening on :%s", cfg.Port)
 	if err := app.Run(":" + cfg.Port); err != nil {
