@@ -178,6 +178,15 @@ type Link struct {
 	UpdatedAt              pgtype.Timestamp `json:"updatedAt"`
 }
 
+type Session struct {
+	ID        pgtype.UUID      `json:"id"`
+	UserId    pgtype.UUID      `json:"userId"`
+	TokenHash string           `json:"tokenHash"`
+	ExpiresAt pgtype.Timestamp `json:"expiresAt"`
+	RevokedAt pgtype.Timestamp `json:"revokedAt"`
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
+}
+
 type Subscription struct {
 	ID        pgtype.UUID         `json:"id"`
 	UserId    pgtype.UUID         `json:"userId"`

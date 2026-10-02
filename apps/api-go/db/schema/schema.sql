@@ -85,3 +85,14 @@ CREATE TABLE "SubscriptionLog" (
     "createdAt" timestamp NOT NULL DEFAULT now(),
     "updatedAt" timestamp NOT NULL DEFAULT now()
 );
+
+CREATE TABLE "Session" (
+    id uuid PRIMARY KEY,
+    "userId" uuid NOT NULL REFERENCES "User" (id) ON DELETE CASCADE,
+    "tokenHash" text NOT NULL UNIQUE,
+    "expiresAt" timestamp NOT NULL,
+    "revokedAt" timestamp,
+    "createdAt" timestamp NOT NULL DEFAULT now()
+);
+
+CREATE INDEX "Session_userId_idx" ON "Session" ("userId");

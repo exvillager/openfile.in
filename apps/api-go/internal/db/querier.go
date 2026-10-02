@@ -6,13 +6,20 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	GetActiveSessionByTokenHash(ctx context.Context, tokenhash string) (Session, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	Ping(ctx context.Context) (int32, error)
+	// Logout keeps the row as a login record and marks it revoked.
+	RevokeSession(ctx context.Context, tokenhash string) error
+	RevokeUserSessions(ctx context.Context, userid pgtype.UUID) error
 }
 
 var _ Querier = (*Queries)(nil)
