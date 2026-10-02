@@ -7,6 +7,7 @@ import (
 	"github.com/exvillager/openfile.in/internal/config"
 	"github.com/exvillager/openfile.in/internal/controller"
 	"github.com/exvillager/openfile.in/internal/db"
+	"github.com/exvillager/openfile.in/internal/middleware"
 	"github.com/exvillager/openfile.in/internal/router"
 	"github.com/exvillager/openfile.in/internal/service"
 )
@@ -32,9 +33,13 @@ func main() {
 
 	queries := db.New(pool)
 
+	authService := service.NewAuthService(pool, queries, cfg)
+
 	app := router.New(router.Controllers{
 		Health: controller.NewHealthController(service.NewHealthService(queries)),
-		Auth:   controller.NewAuthController(service.NewAuthService(pool, queries, cfg), cfg),
+		Auth:   controller.NewAuthController(authService, cfg),
+	}, router.Middlewares{
+		RequireAuth: middleware.RequireAuth(authService),
 	})
 
 	log.Printf("listening on :%s", cfg.Port)

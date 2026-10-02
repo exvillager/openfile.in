@@ -35,22 +35,27 @@ func newRouter() *nanoserve.NanoServe {
 	return r
 }
 
-func New(c Controllers) *nanoserve.NanoServe {
+// Middlewares groups the middleware the router attaches to routes.
+type Middlewares struct {
+	RequireAuth nanoserve.HandlerFunction
+}
+
+func New(c Controllers, m Middlewares) *nanoserve.NanoServe {
 	app := newRouter()
 
 	app.GET("/health", c.Health.Check)
 
 	// sub routes application
-	app.Sub("/api/v1/auth/*", AuthRouter(c.Auth))
+	app.Sub("/api/v1/auth/*", AuthRouter(c.Auth, m))
 	return app
 }
 
-func AuthRouter(auth *controller.AuthController) *nanoserve.NanoServe {
+func AuthRouter(auth *controller.AuthController, m Middlewares) *nanoserve.NanoServe {
 	r := newRouter()
 	r.POST("/login", auth.Login)
 	r.POST("/signup", auth.Signup)
-	r.POST("/logout", auth.Logout)
+	r.POST("/logout", m.RequireAuth, auth.Logout)
 	r.POST("/refresh-token", auth.RefreshToken)
-	r.POST("/check", auth.Check)
+	r.POST("/check", m.RequireAuth, auth.Check)
 	return r
 }
