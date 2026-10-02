@@ -118,8 +118,24 @@ func (ac *AuthController) Logout(c *nanoserve.Context) error {
 	return c.Status(http.StatusOK).JSON(map[string]string{"message": "User logged out successfully"})
 }
 
+// RefreshToken reads the refreshToken cookie, like the Node backend.
 func (ac *AuthController) RefreshToken(c *nanoserve.Context) error {
-	return nil
+	cookie, err := c.GetCookie("refreshToken")
+	if err != nil || cookie.Value == "" {
+		return response.NewApiError("Unauthorized", http.StatusUnauthorized)
+	}
+
+	tokens, err := ac.auth.Refresh(c.Request.Context(), cookie.Value)
+	if err != nil {
+		return err
+	}
+
+	ac.setAuthCookies(c, tokens)
+
+	return c.Status(http.StatusOK).JSON(map[string]string{
+		"accessToken":  tokens.AccessToken,
+		"refreshToken": tokens.RefreshToken,
+	})
 }
 
 // Check runs behind RequireAuth, which stores the verified claims as "claims".

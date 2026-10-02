@@ -129,8 +129,8 @@ func (s *AuthService) Signup(ctx context.Context, username, password string) (Au
 	return AuthResult{User: user, Tokens: tokens}, nil
 }
 
-// createSession signs a token pair and stores the access token's hash, so
-// requests can be checked against the database and logout can revoke it.
+// createSession signs a token pair and stores both hashes in one session row,
+// so requests and refreshes can be checked against it and logout kills both.
 // It takes the querier so Signup can run it inside its transaction.
 func (s *AuthService) createSession(ctx context.Context, q db.Querier, user db.User) (util.TokenPair, error) {
 	tokens, err := util.GenerateTokens(user, s.cfg)
@@ -139,15 +139,71 @@ func (s *AuthService) createSession(ctx context.Context, q db.Querier, user db.U
 	}
 
 	if _, err := q.CreateSession(ctx, db.CreateSessionParams{
-		ID:        newID(),
-		UserId:    user.ID,
-		TokenHash: util.HashToken(tokens.AccessToken),
-		ExpiresAt: pgtype.Timestamp{Time: time.Now().UTC().Add(s.cfg.AccessTokenExpiry), Valid: true},
+		ID:               newID(),
+		UserId:           user.ID,
+		TokenHash:        util.HashToken(tokens.AccessToken),
+		RefreshTokenHash: util.HashToken(tokens.RefreshToken),
+		ExpiresAt:        s.sessionExpiry(),
 	}); err != nil {
 		return util.TokenPair{}, err
 	}
 
 	return tokens, nil
+}
+
+// Refresh swaps a refresh token for a new token pair in the same session.
+// The old access and refresh tokens stop working right away.
+func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (util.TokenPair, error) {
+	if _, err := util.VerifyRefreshToken(refreshToken, s.cfg); err != nil {
+		return util.TokenPair{}, errUnauthorized
+	}
+
+	oldHash := util.HashToken(refreshToken)
+
+	session, err := s.queries.GetActiveSessionByRefreshHash(ctx, oldHash)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return util.TokenPair{}, errUnauthorized
+	}
+	if err != nil {
+		return util.TokenPair{}, err
+	}
+
+	user, err := s.queries.GetUserByID(ctx, session.UserId)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return util.TokenPair{}, errUnauthorized
+	}
+	if err != nil {
+		return util.TokenPair{}, err
+	}
+
+	tokens, err := util.GenerateTokens(user, s.cfg)
+	if err != nil {
+		return util.TokenPair{}, err
+	}
+
+	rotated, err := s.queries.RotateSession(ctx, db.RotateSessionParams{
+		ID:                  session.ID,
+		OldRefreshTokenHash: oldHash,
+		TokenHash:           util.HashToken(tokens.AccessToken),
+		RefreshTokenHash:    util.HashToken(tokens.RefreshToken),
+		ExpiresAt:           s.sessionExpiry(),
+	})
+	if err != nil {
+		return util.TokenPair{}, err
+	}
+	// Another refresh with the same token got there first.
+	if rotated == 0 {
+		return util.TokenPair{}, errUnauthorized
+	}
+
+	return tokens, nil
+}
+
+// sessionExpiry follows the refresh token, the longest-lived token in a session.
+// The access token's shorter lifetime is still enforced by its JWT exp.
+// UTC because the column is a timestamp without time zone.
+func (s *AuthService) sessionExpiry() pgtype.Timestamp {
+	return pgtype.Timestamp{Time: time.Now().UTC().Add(s.cfg.RefreshTokenExpiry), Valid: true}
 }
 
 // Authenticate accepts an access token only if its JWT is valid and its
