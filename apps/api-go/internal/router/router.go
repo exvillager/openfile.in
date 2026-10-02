@@ -26,9 +26,17 @@ type Controllers struct {
 	Auth   *controller.AuthController
 }
 
+// newRouter returns a nanoserve instance that reports errors with handleError.
+// Sub-routers need it too: Sub runs a sub-router's errors through its own
+// ErrorHandler, and nanoserve's default turns every error into a plain-text 500.
+func newRouter() *nanoserve.NanoServe {
+	r := nanoserve.New()
+	r.ErrorHandler = handleError
+	return r
+}
+
 func New(c Controllers) *nanoserve.NanoServe {
-	app := nanoserve.New()
-	app.ErrorHandler = handleError
+	app := newRouter()
 
 	app.GET("/health", c.Health.Check)
 
@@ -38,7 +46,7 @@ func New(c Controllers) *nanoserve.NanoServe {
 }
 
 func AuthRouter(auth *controller.AuthController) *nanoserve.NanoServe {
-	r := nanoserve.New()
+	r := newRouter()
 	r.POST("/login", auth.Login)
 	r.POST("/signup", auth.Signup)
 	r.POST("/logout", auth.Logout)
