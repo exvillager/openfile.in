@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	GetUserByUsername(ctx context.Context, username string) (User, error)
 	Ping(ctx context.Context) (int32, error)
 }
 
