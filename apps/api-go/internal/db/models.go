@@ -214,7 +214,6 @@ type User struct {
 	Name              *string          `json:"name"`
 	Username          string           `json:"username"`
 	Passoword         *string          `json:"passoword"`
-	Avatar            *string          `json:"avatar"`
 	LinkCount         int32            `json:"linkCount"`
 	LinkCountExpireAt pgtype.Timestamp `json:"linkCountExpireAt"`
 	CreatedAt         pgtype.Timestamp `json:"createdAt"`

@@ -7,10 +7,41 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO "User" (id, username, name, passoword)
+VALUES ($1, $2, $2, $3)
+RETURNING id, email, name, username, passoword, "linkCount", "linkCountExpireAt", "createdAt", "updatedAt"
+`
+
+type CreateUserParams struct {
+	ID        pgtype.UUID `json:"id"`
+	Username  string      `json:"username"`
+	Passoword *string     `json:"passoword"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.ID, arg.Username, arg.Passoword)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Name,
+		&i.Username,
+		&i.Passoword,
+		&i.LinkCount,
+		&i.LinkCountExpireAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, email, name, username, passoword, avatar, "linkCount", "linkCountExpireAt", "createdAt", "updatedAt" FROM "User"
+SELECT id, email, name, username, passoword, "linkCount", "linkCountExpireAt", "createdAt", "updatedAt" FROM "User"
 WHERE username = $1
 LIMIT 1
 `
@@ -24,7 +55,6 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Name,
 		&i.Username,
 		&i.Passoword,
-		&i.Avatar,
 		&i.LinkCount,
 		&i.LinkCountExpireAt,
 		&i.CreatedAt,

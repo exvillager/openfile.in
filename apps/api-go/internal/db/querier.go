@@ -9,6 +9,8 @@ import (
 )
 
 type Querier interface {
+	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	Ping(ctx context.Context) (int32, error)
 }

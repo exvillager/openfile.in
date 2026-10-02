@@ -11,7 +11,6 @@ type User struct {
 	ID        string    `json:"id"`
 	Username  string    `json:"username"`
 	Email     *string   `json:"email"`
-	Avatar    *string   `json:"avatar"`
 	Name      *string   `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -23,7 +22,6 @@ func NewUser(u db.User) User {
 		ID:        u.ID.String(),
 		Username:  u.Username,
 		Email:     u.Email,
-		Avatar:    u.Avatar,
 		Name:      u.Name,
 		CreatedAt: u.CreatedAt.Time,
 		UpdatedAt: u.UpdatedAt.Time,

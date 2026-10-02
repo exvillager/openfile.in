@@ -9,7 +9,6 @@ CREATE TABLE "User" (
     name varchar(255),
     username varchar(255) NOT NULL UNIQUE,
     passoword text,
-    avatar varchar(255) DEFAULT '',
     "linkCount" integer NOT NULL DEFAULT 0,
     "linkCountExpireAt" timestamp,
     "createdAt" timestamp NOT NULL DEFAULT now(),
