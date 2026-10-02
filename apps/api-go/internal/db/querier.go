@@ -14,13 +14,18 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	GetActiveSessionByRefreshHash(ctx context.Context, refreshtokenhash string) (Session, error)
 	GetActiveSessionByTokenHash(ctx context.Context, tokenhash string) (Session, error)
+	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserWithPlan(ctx context.Context, id pgtype.UUID) (GetUserWithPlanRow, error)
 	Ping(ctx context.Context) (int32, error)
 	// Logout keeps the row as a login record and marks it revoked.
 	RevokeSession(ctx context.Context, tokenhash string) error
 	RevokeUserSessions(ctx context.Context, userid pgtype.UUID) error
+	// RotateSession swaps in the new token pair only if the old refresh token
+	// still matches, so two refreshes racing with the same token can't both win.
+	RotateSession(ctx context.Context, arg RotateSessionParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

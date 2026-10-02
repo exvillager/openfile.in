@@ -179,12 +179,13 @@ type Link struct {
 }
 
 type Session struct {
-	ID        pgtype.UUID      `json:"id"`
-	UserId    pgtype.UUID      `json:"userId"`
-	TokenHash string           `json:"tokenHash"`
-	ExpiresAt pgtype.Timestamp `json:"expiresAt"`
-	RevokedAt pgtype.Timestamp `json:"revokedAt"`
-	CreatedAt pgtype.Timestamp `json:"createdAt"`
+	ID               pgtype.UUID      `json:"id"`
+	UserId           pgtype.UUID      `json:"userId"`
+	TokenHash        string           `json:"tokenHash"`
+	RefreshTokenHash string           `json:"refreshTokenHash"`
+	ExpiresAt        pgtype.Timestamp `json:"expiresAt"`
+	RevokedAt        pgtype.Timestamp `json:"revokedAt"`
+	CreatedAt        pgtype.Timestamp `json:"createdAt"`
 }
 
 type Subscription struct {

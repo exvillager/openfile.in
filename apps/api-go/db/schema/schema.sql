@@ -90,6 +90,7 @@ CREATE TABLE "Session" (
     id uuid PRIMARY KEY,
     "userId" uuid NOT NULL REFERENCES "User" (id) ON DELETE CASCADE,
     "tokenHash" text NOT NULL UNIQUE,
+    "refreshTokenHash" text NOT NULL UNIQUE,
     "expiresAt" timestamp NOT NULL,
     "revokedAt" timestamp,
     "createdAt" timestamp NOT NULL DEFAULT now()

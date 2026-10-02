@@ -12,16 +12,17 @@ import (
 )
 
 const createSession = `-- name: CreateSession :one
-INSERT INTO "Session" (id, "userId", "tokenHash", "expiresAt")
-VALUES ($1, $2, $3, $4)
-RETURNING id, "userId", "tokenHash", "expiresAt", "revokedAt", "createdAt"
+INSERT INTO "Session" (id, "userId", "tokenHash", "refreshTokenHash", "expiresAt")
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, "userId", "tokenHash", "refreshTokenHash", "expiresAt", "revokedAt", "createdAt"
 `
 
 type CreateSessionParams struct {
-	ID        pgtype.UUID      `json:"id"`
-	UserId    pgtype.UUID      `json:"userId"`
-	TokenHash string           `json:"tokenHash"`
-	ExpiresAt pgtype.Timestamp `json:"expiresAt"`
+	ID               pgtype.UUID      `json:"id"`
+	UserId           pgtype.UUID      `json:"userId"`
+	TokenHash        string           `json:"tokenHash"`
+	RefreshTokenHash string           `json:"refreshTokenHash"`
+	ExpiresAt        pgtype.Timestamp `json:"expiresAt"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
@@ -29,6 +30,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 		arg.ID,
 		arg.UserId,
 		arg.TokenHash,
+		arg.RefreshTokenHash,
 		arg.ExpiresAt,
 	)
 	var i Session
@@ -36,6 +38,30 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 		&i.ID,
 		&i.UserId,
 		&i.TokenHash,
+		&i.RefreshTokenHash,
+		&i.ExpiresAt,
+		&i.RevokedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getActiveSessionByRefreshHash = `-- name: GetActiveSessionByRefreshHash :one
+SELECT id, "userId", "tokenHash", "refreshTokenHash", "expiresAt", "revokedAt", "createdAt" FROM "Session"
+WHERE "refreshTokenHash" = $1
+  AND "revokedAt" IS NULL
+  AND "expiresAt" > now()
+LIMIT 1
+`
+
+func (q *Queries) GetActiveSessionByRefreshHash(ctx context.Context, refreshtokenhash string) (Session, error) {
+	row := q.db.QueryRow(ctx, getActiveSessionByRefreshHash, refreshtokenhash)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.UserId,
+		&i.TokenHash,
+		&i.RefreshTokenHash,
 		&i.ExpiresAt,
 		&i.RevokedAt,
 		&i.CreatedAt,
@@ -44,7 +70,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 }
 
 const getActiveSessionByTokenHash = `-- name: GetActiveSessionByTokenHash :one
-SELECT id, "userId", "tokenHash", "expiresAt", "revokedAt", "createdAt" FROM "Session"
+SELECT id, "userId", "tokenHash", "refreshTokenHash", "expiresAt", "revokedAt", "createdAt" FROM "Session"
 WHERE "tokenHash" = $1
   AND "revokedAt" IS NULL
   AND "expiresAt" > now()
@@ -58,6 +84,7 @@ func (q *Queries) GetActiveSessionByTokenHash(ctx context.Context, tokenhash str
 		&i.ID,
 		&i.UserId,
 		&i.TokenHash,
+		&i.RefreshTokenHash,
 		&i.ExpiresAt,
 		&i.RevokedAt,
 		&i.CreatedAt,
@@ -86,4 +113,38 @@ WHERE "userId" = $1 AND "revokedAt" IS NULL
 func (q *Queries) RevokeUserSessions(ctx context.Context, userid pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, revokeUserSessions, userid)
 	return err
+}
+
+const rotateSession = `-- name: RotateSession :execrows
+UPDATE "Session"
+SET "tokenHash" = $1,
+    "refreshTokenHash" = $2,
+    "expiresAt" = $3
+WHERE id = $4
+  AND "refreshTokenHash" = $5
+  AND "revokedAt" IS NULL
+`
+
+type RotateSessionParams struct {
+	TokenHash           string           `json:"token_hash"`
+	RefreshTokenHash    string           `json:"refresh_token_hash"`
+	ExpiresAt           pgtype.Timestamp `json:"expires_at"`
+	ID                  pgtype.UUID      `json:"id"`
+	OldRefreshTokenHash string           `json:"old_refresh_token_hash"`
+}
+
+// RotateSession swaps in the new token pair only if the old refresh token
+// still matches, so two refreshes racing with the same token can't both win.
+func (q *Queries) RotateSession(ctx context.Context, arg RotateSessionParams) (int64, error) {
+	result, err := q.db.Exec(ctx, rotateSession,
+		arg.TokenHash,
+		arg.RefreshTokenHash,
+		arg.ExpiresAt,
+		arg.ID,
+		arg.OldRefreshTokenHash,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
