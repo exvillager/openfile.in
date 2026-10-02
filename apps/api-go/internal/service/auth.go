@@ -175,6 +175,20 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 	return s.queries.RevokeSession(ctx, util.HashToken(token))
 }
 
+// CurrentUser loads the user behind an authenticated request, with their plan.
+func (s *AuthService) CurrentUser(ctx context.Context, userID string) (db.GetUserWithPlanRow, error) {
+	var id pgtype.UUID
+	if err := id.Scan(userID); err != nil {
+		return db.GetUserWithPlanRow{}, errUnauthorized
+	}
+
+	user, err := s.queries.GetUserWithPlan(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return db.GetUserWithPlanRow{}, response.NewApiError("Unauthorized: User not found", http.StatusUnauthorized)
+	}
+	return user, err
+}
+
 // newID returns a UUIDv7
 func newID() pgtype.UUID {
 	return pgtype.UUID{Bytes: uuid.Must(uuid.NewV7()), Valid: true}

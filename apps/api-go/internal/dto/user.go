@@ -28,3 +28,36 @@ func NewUser(u db.User) User {
 		Plan:      "free",
 	}
 }
+
+// CurrentUser is what /auth/check returns, matching the Node backend's
+// findUserAndPlanName shape.
+type CurrentUser struct {
+	ID                string        `json:"id"`
+	Name              *string       `json:"name"`
+	Email             *string       `json:"email"`
+	Username          string        `json:"username"`
+	LinkCount         int32         `json:"linkCount"`
+	LinkCountExpireAt *time.Time    `json:"linkCountExpireAt"`
+	Subscription      *Subscription `json:"subscription"`
+}
+
+type Subscription struct {
+	PlanName string `json:"planName"`
+}
+
+func NewCurrentUser(u db.GetUserWithPlanRow) CurrentUser {
+	cu := CurrentUser{
+		ID:        u.ID.String(),
+		Name:      u.Name,
+		Email:     u.Email,
+		Username:  u.Username,
+		LinkCount: u.LinkCount,
+	}
+	if u.LinkCountExpireAt.Valid {
+		cu.LinkCountExpireAt = &u.LinkCountExpireAt.Time
+	}
+	if u.PlanName != nil {
+		cu.Subscription = &Subscription{PlanName: *u.PlanName}
+	}
+	return cu
+}

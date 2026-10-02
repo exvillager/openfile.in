@@ -62,3 +62,36 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	)
 	return i, err
 }
+
+const getUserWithPlan = `-- name: GetUserWithPlan :one
+SELECT u.id, u.name, u.email, u.username, u."linkCount", u."linkCountExpireAt", s."planName"
+FROM "User" u
+LEFT JOIN "Subscription" s ON s."userId" = u.id
+WHERE u.id = $1
+LIMIT 1
+`
+
+type GetUserWithPlanRow struct {
+	ID                pgtype.UUID      `json:"id"`
+	Name              *string          `json:"name"`
+	Email             *string          `json:"email"`
+	Username          string           `json:"username"`
+	LinkCount         int32            `json:"linkCount"`
+	LinkCountExpireAt pgtype.Timestamp `json:"linkCountExpireAt"`
+	PlanName          *string          `json:"planName"`
+}
+
+func (q *Queries) GetUserWithPlan(ctx context.Context, id pgtype.UUID) (GetUserWithPlanRow, error) {
+	row := q.db.QueryRow(ctx, getUserWithPlan, id)
+	var i GetUserWithPlanRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Username,
+		&i.LinkCount,
+		&i.LinkCountExpireAt,
+		&i.PlanName,
+	)
+	return i, err
+}

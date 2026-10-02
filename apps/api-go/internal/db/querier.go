@@ -16,6 +16,7 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	GetActiveSessionByTokenHash(ctx context.Context, tokenhash string) (Session, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
+	GetUserWithPlan(ctx context.Context, id pgtype.UUID) (GetUserWithPlanRow, error)
 	Ping(ctx context.Context) (int32, error)
 	// Logout keeps the row as a login record and marks it revoked.
 	RevokeSession(ctx context.Context, tokenhash string) error

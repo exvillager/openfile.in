@@ -122,8 +122,19 @@ func (ac *AuthController) RefreshToken(c *nanoserve.Context) error {
 	return nil
 }
 
+// Check runs behind RequireAuth, which stores the verified claims as "claims".
 func (ac *AuthController) Check(c *nanoserve.Context) error {
-	return nil
+	claims, ok := c.Get("claims").(*util.Claims)
+	if !ok {
+		return response.NewApiError("Unauthorized", http.StatusUnauthorized)
+	}
+
+	user, err := ac.auth.CurrentUser(c.Request.Context(), claims.ID)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(http.StatusOK).JSON(map[string]dto.CurrentUser{"user": dto.NewCurrentUser(user)})
 }
 
 // setAuthCookies uses the same cookie options as the Node backend.
