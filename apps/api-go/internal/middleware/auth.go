@@ -9,14 +9,18 @@ import (
 	"github.com/exvillager/openfile.in/internal/service"
 )
 
-// ClaimsKey is where RequireAuth stores the *util.Claims on the context.
-const ClaimsKey = "claims"
+var errUnauthorized = response.NewApiError("Unauthorized", http.StatusUnauthorized)
 
+// RequireAuth lets a request through only with a valid access token whose
+// session is still active. It stores the verified token as "token" and its
+// *util.Claims as "claims".
+// Like the Node backend, it reads the Authorization header first and falls
+// back to the accessToken cookie.
 func RequireAuth(auth *service.AuthService) nanoserve.HandlerFunction {
 	return func(c *nanoserve.Context) error {
-		token := AccessToken(c)
+		token := accessToken(c)
 		if token == "" {
-			return response.NewApiError("Unauthorized", http.StatusUnauthorized)
+			return errUnauthorized
 		}
 
 		claims, err := auth.Authenticate(c.Request.Context(), token)
@@ -24,13 +28,13 @@ func RequireAuth(auth *service.AuthService) nanoserve.HandlerFunction {
 			return err
 		}
 
-		c.Set(ClaimsKey, claims)
+		c.Set("token", token)
+		c.Set("claims", claims)
 		return c.Next()
 	}
 }
 
-// AccessToken returns the raw access token from the request, if any.
-func AccessToken(c *nanoserve.Context) string {
+func accessToken(c *nanoserve.Context) string {
 	if h := c.GetHeader("Authorization"); h != "" {
 		return strings.TrimPrefix(h, "Bearer ")
 	}

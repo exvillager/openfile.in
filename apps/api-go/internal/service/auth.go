@@ -169,6 +169,12 @@ func (s *AuthService) Authenticate(ctx context.Context, token string) (*util.Cla
 	return claims, nil
 }
 
+// Logout revokes the session behind this access token. The row is kept as a
+// login record; the token stops working right away.
+func (s *AuthService) Logout(ctx context.Context, token string) error {
+	return s.queries.RevokeSession(ctx, util.HashToken(token))
+}
+
 // newID returns a UUIDv7
 func newID() pgtype.UUID {
 	return pgtype.UUID{Bytes: uuid.Must(uuid.NewV7()), Valid: true}

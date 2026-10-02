@@ -102,8 +102,20 @@ func validateSignup(req authRequest) error {
 	return nil
 }
 
+// Logout runs behind RequireAuth, which stores the verified token as "token".
 func (ac *AuthController) Logout(c *nanoserve.Context) error {
-	return nil
+	token, ok := c.Get("token").(string)
+	if !ok {
+		return response.NewApiError("Unauthorized", http.StatusUnauthorized)
+	}
+
+	if err := ac.auth.Logout(c.Request.Context(), token); err != nil {
+		return err
+	}
+
+	ac.clearAuthCookies(c)
+
+	return c.Status(http.StatusOK).JSON(map[string]string{"message": "User logged out successfully"})
 }
 
 func (ac *AuthController) RefreshToken(c *nanoserve.Context) error {
@@ -118,6 +130,15 @@ func (ac *AuthController) Check(c *nanoserve.Context) error {
 func (ac *AuthController) setAuthCookies(c *nanoserve.Context, tokens util.TokenPair) {
 	c.SetCookie(authCookie("accessToken", tokens.AccessToken, ac.cfg.AccessTokenExpiry))
 	c.SetCookie(authCookie("refreshToken", tokens.RefreshToken, ac.cfg.RefreshTokenExpiry))
+}
+
+// clearAuthCookies expires both cookies with the same attributes they were set with.
+func (ac *AuthController) clearAuthCookies(c *nanoserve.Context) {
+	for _, name := range []string{"accessToken", "refreshToken"} {
+		cookie := authCookie(name, "", 0)
+		cookie.MaxAge = -1
+		c.SetCookie(cookie)
+	}
 }
 
 func authCookie(name, value string, maxAge time.Duration) http.Cookie {
