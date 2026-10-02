@@ -54,8 +54,8 @@ func AuthRouter(auth *controller.AuthController, m Middlewares) *nanoserve.NanoS
 	r := newRouter()
 	r.POST("/login", auth.Login)
 	r.POST("/signup", auth.Signup)
-	r.POST("/logout", m.RequireAuth, auth.Logout)
-	r.POST("/refresh-token", auth.RefreshToken)
+	r.GET("/logout", m.RequireAuth, auth.Logout)
+	r.GET("/refresh-token", auth.RefreshToken)
 	r.GET("/check", m.RequireAuth, auth.Check)
 	return r
 }
