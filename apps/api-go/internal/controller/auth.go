@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 	"time"
+	"unicode/utf8"
 
 	"github.com/exvillager/nanoserve"
 	"github.com/exvillager/openfile.in/internal/config"
@@ -21,7 +22,7 @@ func NewAuthController(auth *service.AuthService, cfg *config.Config) *AuthContr
 	return &AuthController{auth: auth, cfg: cfg}
 }
 
-type loginRequest struct {
+type authRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
@@ -34,7 +35,7 @@ type authResponse struct {
 }
 
 func (ac *AuthController) Login(c *nanoserve.Context) error {
-	var req loginRequest
+	var req authRequest
 	if err := c.Bind(&req); err != nil {
 		return response.NewApiError("Invalid request body", http.StatusBadRequest)
 	}
@@ -60,6 +61,44 @@ func (ac *AuthController) Login(c *nanoserve.Context) error {
 }
 
 func (ac *AuthController) Signup(c *nanoserve.Context) error {
+	var req authRequest
+	if err := c.Bind(&req); err != nil {
+		return response.NewApiError("Invalid request body", http.StatusBadRequest)
+	}
+	if err := validateSignup(req); err != nil {
+		return err
+	}
+
+	res, err := ac.auth.Signup(c.Request.Context(), req.Username, req.Password)
+	if err != nil {
+		return err
+	}
+
+	ac.setAuthCookies(c, res.Tokens)
+
+	return c.Status(http.StatusCreated).JSON(authResponse{
+		User:         dto.NewUser(res.User),
+		AccessToken:  res.Tokens.AccessToken,
+		RefreshToken: res.Tokens.RefreshToken,
+	})
+}
+
+// validateSignup mirrors the Node backend's registerSchema.
+func validateSignup(req authRequest) error {
+	switch n := utf8.RuneCountInString(req.Username); {
+	case n < 3:
+		return response.NewApiError("Username must be at least 3 characters", http.StatusBadRequest)
+	case n > 50:
+		return response.NewApiError("Username is too long", http.StatusBadRequest)
+	}
+
+	if utf8.RuneCountInString(req.Password) < 4 {
+		return response.NewApiError("Password must be at least 4 characters", http.StatusBadRequest)
+	}
+	// Node allows 100 characters, but bcrypt only takes 72 bytes, so that is the real limit.
+	if len(req.Password) > 72 {
+		return response.NewApiError("Password is too long", http.StatusBadRequest)
+	}
 	return nil
 }
 

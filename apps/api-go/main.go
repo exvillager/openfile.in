@@ -34,7 +34,7 @@ func main() {
 
 	app := router.New(router.Controllers{
 		Health: controller.NewHealthController(service.NewHealthService(queries)),
-		Auth:   controller.NewAuthController(service.NewAuthService(queries, cfg), cfg),
+		Auth:   controller.NewAuthController(service.NewAuthService(pool, queries, cfg), cfg),
 	})
 
 	log.Printf("listening on :%s", cfg.Port)
