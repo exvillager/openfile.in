@@ -1,10 +1,13 @@
 package util
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 
 	"github.com/exvillager/openfile.in/internal/config"
 	"github.com/exvillager/openfile.in/internal/db"
@@ -44,12 +47,20 @@ func VerifyRefreshToken(token string, cfg *config.Config) (*Claims, error) {
 	return verify(token, cfg.RefreshTokenSecret)
 }
 
+// HashToken returns the sha256 of a token, which is what the Session table stores.
+func HashToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
 func sign(user db.User, secret string, expiry time.Duration) (string, error) {
 	now := time.Now()
 	claims := Claims{
 		ID:       user.ID.String(),
 		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
+			// a random id as ID so that same users login attempt cannt create same jwt and same hash
+			ID:        uuid.NewString(),
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(expiry)),
 		},

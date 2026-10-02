@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -21,6 +22,7 @@ import (
 var (
 	errInvalidCredentials = response.NewApiError("Invalid credentials", http.StatusUnauthorized)
 	errUsernameTaken      = response.NewApiError("Username already taken", http.StatusConflict)
+	errUnauthorized       = response.NewApiError("Unauthorized", http.StatusUnauthorized)
 )
 
 // bcryptCost matches the Node backend's Bun.password settings.
@@ -42,7 +44,7 @@ type AuthResult struct {
 	Tokens util.TokenPair
 }
 
-// Login checks the username and password and issues a new token pair.
+// Login checks the username and password, then starts a new session.
 // Passwords are bcrypt hashes, the same format the Node backend writes.
 func (s *AuthService) Login(ctx context.Context, username, password string) (AuthResult, error) {
 	user, err := s.queries.GetUserByUsername(ctx, username)
@@ -61,7 +63,7 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (Aut
 		return AuthResult{}, errInvalidCredentials
 	}
 
-	tokens, err := util.GenerateTokens(user, s.cfg)
+	tokens, err := s.createSession(ctx, s.queries, user)
 	if err != nil {
 		return AuthResult{}, err
 	}
@@ -69,8 +71,8 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (Aut
 	return AuthResult{User: user, Tokens: tokens}, nil
 }
 
-// Signup creates the user and their free subscription in one transaction,
-// then issues a token pair.
+// Signup creates the user, their free subscription and the first session
+// in one transaction, then returns the token pair.
 func (s *AuthService) Signup(ctx context.Context, username, password string) (AuthResult, error) {
 	_, err := s.queries.GetUserByUsername(ctx, username)
 	if err == nil {
@@ -115,19 +117,59 @@ func (s *AuthService) Signup(ctx context.Context, username, password string) (Au
 		return AuthResult{}, err
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	tokens, err := s.createSession(ctx, q, user)
+	if err != nil {
 		return AuthResult{}, err
 	}
 
-	tokens, err := util.GenerateTokens(user, s.cfg)
-	if err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		return AuthResult{}, err
 	}
 
 	return AuthResult{User: user, Tokens: tokens}, nil
 }
 
-// newID returns a UUIDv7, the same id format the Node backend uses.
+// createSession signs a token pair and stores the access token's hash, so
+// requests can be checked against the database and logout can revoke it.
+// It takes the querier so Signup can run it inside its transaction.
+func (s *AuthService) createSession(ctx context.Context, q db.Querier, user db.User) (util.TokenPair, error) {
+	tokens, err := util.GenerateTokens(user, s.cfg)
+	if err != nil {
+		return util.TokenPair{}, err
+	}
+
+	if _, err := q.CreateSession(ctx, db.CreateSessionParams{
+		ID:        newID(),
+		UserId:    user.ID,
+		TokenHash: util.HashToken(tokens.AccessToken),
+		ExpiresAt: pgtype.Timestamp{Time: time.Now().UTC().Add(s.cfg.AccessTokenExpiry), Valid: true},
+	}); err != nil {
+		return util.TokenPair{}, err
+	}
+
+	return tokens, nil
+}
+
+// Authenticate accepts an access token only if its JWT is valid and its
+// session is still active (not logged out, not expired).
+func (s *AuthService) Authenticate(ctx context.Context, token string) (*util.Claims, error) {
+	claims, err := util.VerifyAccessToken(token, s.cfg)
+	if err != nil {
+		return nil, errUnauthorized
+	}
+
+	_, err = s.queries.GetActiveSessionByTokenHash(ctx, util.HashToken(token))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, errUnauthorized
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return claims, nil
+}
+
+// newID returns a UUIDv7
 func newID() pgtype.UUID {
 	return pgtype.UUID{Bytes: uuid.Must(uuid.NewV7()), Valid: true}
 }
