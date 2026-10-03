@@ -12,3 +12,16 @@ WHERE id = $1;
 UPDATE "User"
 SET "linkCount" = "linkCount" + 1
 WHERE id = $1;
+
+-- name: CountLink :one
+SELECT COUNT(*) AS count 
+FROM "Link" 
+WHERE "userId" = $1;
+
+-- name: DeleteLink :exec
+DELETE FROM "Link" WHERE "userId"=$1 AND "id"=$2;
+
+-- name: GetUserLink :one
+SELECT * FROM "Link"
+WHERE id = $1 AND "userId" = $2
+LIMIT 1;

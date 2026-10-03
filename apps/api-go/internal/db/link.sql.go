@@ -11,6 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countLink = `-- name: CountLink :one
+SELECT COUNT(*) AS count 
+FROM "Link" 
+WHERE "userId" = $1
+`
+
+func (q *Queries) CountLink(ctx context.Context, userid pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countLink, userid)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createLink = `-- name: CreateLink :one
 INSERT INTO "Link" (id, token, name, "maxUploads", "uploadCount", "expiresAt", "expireAfterFirstUpload", "userId")
 VALUES ($1, $2, $3, $4, 0, $5, $6, $7)
@@ -37,6 +50,49 @@ func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (Link, e
 		arg.ExpireAfterFirstUpload,
 		arg.UserId,
 	)
+	var i Link
+	err := row.Scan(
+		&i.ID,
+		&i.Token,
+		&i.Name,
+		&i.MaxUploads,
+		&i.UploadCount,
+		&i.ExpiresAt,
+		&i.ExpireAfterFirstUpload,
+		&i.UserId,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const deleteLink = `-- name: DeleteLink :exec
+DELETE FROM "Link" WHERE "userId"=$1 AND "id"=$2
+`
+
+type DeleteLinkParams struct {
+	UserId pgtype.UUID `json:"userId"`
+	ID     pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) DeleteLink(ctx context.Context, arg DeleteLinkParams) error {
+	_, err := q.db.Exec(ctx, deleteLink, arg.UserId, arg.ID)
+	return err
+}
+
+const getUserLink = `-- name: GetUserLink :one
+SELECT id, token, name, "maxUploads", "uploadCount", "expiresAt", "expireAfterFirstUpload", "userId", "createdAt", "updatedAt" FROM "Link"
+WHERE id = $1 AND "userId" = $2
+LIMIT 1
+`
+
+type GetUserLinkParams struct {
+	ID     pgtype.UUID `json:"id"`
+	UserId pgtype.UUID `json:"userId"`
+}
+
+func (q *Queries) GetUserLink(ctx context.Context, arg GetUserLinkParams) (Link, error) {
+	row := q.db.QueryRow(ctx, getUserLink, arg.ID, arg.UserId)
 	var i Link
 	err := row.Scan(
 		&i.ID,

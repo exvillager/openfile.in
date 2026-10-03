@@ -11,14 +11,20 @@ import (
 )
 
 type Querier interface {
+	CountLink(ctx context.Context, userid pgtype.UUID) (int64, error)
+	// One row per file; a sweep that already queued the file is left alone.
+	CreateDeletedFile(ctx context.Context, arg CreateDeletedFileParams) error
 	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteLink(ctx context.Context, arg DeleteLinkParams) error
 	GetActiveSessionByRefreshHash(ctx context.Context, refreshtokenhash string) (Session, error)
 	GetActiveSessionByTokenHash(ctx context.Context, tokenhash string) (Session, error)
+	GetLinkFiles(ctx context.Context, uploadlinkid pgtype.UUID) ([]GetLinkFilesRow, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
+	GetUserLink(ctx context.Context, arg GetUserLinkParams) (Link, error)
 	GetUserWithPlan(ctx context.Context, id pgtype.UUID) (GetUserWithPlanRow, error)
 	IncrementUserLinkCount(ctx context.Context, id pgtype.UUID) error
 	Ping(ctx context.Context) (int32, error)
