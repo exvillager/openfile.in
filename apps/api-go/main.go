@@ -5,12 +5,19 @@ import (
 	"log"
 
 	"github.com/exvillager/openfile.in/internal/config"
+	"github.com/exvillager/openfile.in/internal/controller"
 	"github.com/exvillager/openfile.in/internal/db"
+	"github.com/exvillager/openfile.in/internal/middleware"
 	"github.com/exvillager/openfile.in/internal/router"
+	"github.com/exvillager/openfile.in/internal/service"
 )
 
 func main() {
 	cfg := config.Load()
+
+	if err := db.Migrate(cfg.DatabaseURL); err != nil {
+		log.Fatalf("db migrate: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -25,7 +32,16 @@ func main() {
 	}
 
 	queries := db.New(pool)
-	app := router.New(queries)
+
+	authService := service.NewAuthService(pool, queries, cfg)
+
+	app := router.New(router.Controllers{
+		Health: controller.NewHealthController(service.NewHealthService(queries)),
+		Auth:   controller.NewAuthController(authService, cfg),
+		Link:   controller.NewLinkController(service.NewLinkService(pool, queries)),
+	}, router.Middlewares{
+		RequireAuth: middleware.RequireAuth(authService),
+	})
 
 	log.Printf("listening on :%s", cfg.Port)
 	if err := app.Run(":" + cfg.Port); err != nil {

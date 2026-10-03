@@ -54,6 +54,48 @@ func (ns NullDeletedStatus) Value() (driver.Value, error) {
 	return string(ns.DeletedStatus), nil
 }
 
+type FileStatus string
+
+const (
+	FileStatusPENDING   FileStatus = "PENDING"
+	FileStatusCONFIRMED FileStatus = "CONFIRMED"
+)
+
+func (e *FileStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = FileStatus(s)
+	case string:
+		*e = FileStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for FileStatus: %T", src)
+	}
+	return nil
+}
+
+type NullFileStatus struct {
+	FileStatus FileStatus `json:"FileStatus"`
+	Valid      bool       `json:"valid"` // Valid is true if FileStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullFileStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.FileStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.FileStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullFileStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.FileStatus), nil
+}
+
 type SubscriptionStatus string
 
 const (
@@ -111,9 +153,12 @@ type DeletedFile struct {
 type File struct {
 	ID           pgtype.UUID      `json:"id"`
 	Url          string           `json:"url"`
+	Key          string           `json:"key"`
 	Name         string           `json:"name"`
 	Size         int64            `json:"size"`
 	KeyUsed      bool             `json:"keyUsed"`
+	Status       FileStatus       `json:"status"`
+	ExpiresAt    pgtype.Timestamp `json:"expiresAt"`
 	UploadLinkId pgtype.UUID      `json:"uploadLinkId"`
 	UserId       pgtype.UUID      `json:"userId"`
 	CreatedAt    pgtype.Timestamp `json:"createdAt"`
@@ -131,6 +176,16 @@ type Link struct {
 	UserId                 pgtype.UUID      `json:"userId"`
 	CreatedAt              pgtype.Timestamp `json:"createdAt"`
 	UpdatedAt              pgtype.Timestamp `json:"updatedAt"`
+}
+
+type Session struct {
+	ID               pgtype.UUID      `json:"id"`
+	UserId           pgtype.UUID      `json:"userId"`
+	TokenHash        string           `json:"tokenHash"`
+	RefreshTokenHash string           `json:"refreshTokenHash"`
+	ExpiresAt        pgtype.Timestamp `json:"expiresAt"`
+	RevokedAt        pgtype.Timestamp `json:"revokedAt"`
+	CreatedAt        pgtype.Timestamp `json:"createdAt"`
 }
 
 type Subscription struct {
@@ -169,7 +224,6 @@ type User struct {
 	Name              *string          `json:"name"`
 	Username          string           `json:"username"`
 	Passoword         *string          `json:"passoword"`
-	Avatar            *string          `json:"avatar"`
 	LinkCount         int32            `json:"linkCount"`
 	LinkCountExpireAt pgtype.Timestamp `json:"linkCountExpireAt"`
 	CreatedAt         pgtype.Timestamp `json:"createdAt"`

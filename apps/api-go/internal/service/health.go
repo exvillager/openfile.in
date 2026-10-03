@@ -13,8 +13,16 @@ type HealthStatus struct {
 	DB     string `json:"db"`
 }
 
-func Health(ctx context.Context, queries *db.Queries) (response.ApiResponse[HealthStatus], error) {
-	if _, err := queries.Ping(ctx); err != nil {
+type HealthService struct {
+	queries db.Querier
+}
+
+func NewHealthService(queries db.Querier) *HealthService {
+	return &HealthService{queries: queries}
+}
+
+func (s *HealthService) Check(ctx context.Context) (response.ApiResponse[HealthStatus], error) {
+	if _, err := s.queries.Ping(ctx); err != nil {
 		return response.ApiResponse[HealthStatus]{}, response.NewApiError("database unreachable", http.StatusServiceUnavailable)
 	}
 
