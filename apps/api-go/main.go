@@ -38,6 +38,7 @@ func main() {
 	app := router.New(router.Controllers{
 		Health: controller.NewHealthController(service.NewHealthService(queries)),
 		Auth:   controller.NewAuthController(authService, cfg),
+		Link:   controller.NewLinkController(service.NewLinkService(pool, queries)),
 	}, router.Middlewares{
 		RequireAuth: middleware.RequireAuth(authService),
 	})

@@ -24,6 +24,7 @@ func handleError(c *nanoserve.Context, err error) {
 type Controllers struct {
 	Health *controller.HealthController
 	Auth   *controller.AuthController
+	Link   *controller.LinkController
 }
 
 // newRouter returns a nanoserve instance that reports errors with handleError.
@@ -47,6 +48,7 @@ func New(c Controllers, m Middlewares) *nanoserve.NanoServe {
 
 	// sub routes application
 	app.Sub("/api/v1/auth/*", AuthRouter(c.Auth, m))
+	app.Sub("/api/v1/link/*", LinkRouter(c.Link, m))
 	return app
 }
 
@@ -57,5 +59,11 @@ func AuthRouter(auth *controller.AuthController, m Middlewares) *nanoserve.NanoS
 	r.GET("/logout", m.RequireAuth, auth.Logout)
 	r.GET("/refresh-token", auth.RefreshToken)
 	r.GET("/check", m.RequireAuth, auth.Check)
+	return r
+}
+
+func LinkRouter(link *controller.LinkController, m Middlewares) *nanoserve.NanoServe {
+	r := newRouter()
+	r.POST("/", m.RequireAuth, link.Create)
 	return r
 }
