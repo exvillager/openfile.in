@@ -41,7 +41,7 @@ behaviour lives in `apps/backend/src`, so the Go version can match it.
 | [ ] | `GET /count` | `getLinksCount` |
 | [ ] | `GET /validate` | `validateLink` |
 | [x] | `POST /` (create link, plan limits) | `generateLink` → `GenerateLinkForUpload` |
-| [ ] | `DELETE /:id` | `fetchLinkWithUser` + `deleteLink` |
+| [x] | `DELETE /:id` | `fetchLinkWithUser` + `deleteLink` |
 
 ## Files: `/api/v1/file`
 

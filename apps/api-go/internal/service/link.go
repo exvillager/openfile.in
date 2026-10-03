@@ -19,6 +19,8 @@ import (
 
 const oneDay = 24 * time.Hour
 
+var errLinkNotFound = response.NewApiError("Not Found", http.StatusNotFound)
+
 type planLimit struct {
 	maxLinks          int32 // links per 24h window
 	maxUploadsPerLink int32
@@ -145,4 +147,46 @@ func (s *LinkService) CreateLink(ctx context.Context, userID string, in CreateLi
 	}
 
 	return link, nil
+}
+
+// DeleteLink deletes a user's link. Each of its files gets a PENDING
+// DeletedFile row first, so the storage objects can be removed later by the
+// delete worker; the File rows themselves go with the link (ON DELETE CASCADE).
+func (s *LinkService) DeleteLink(ctx context.Context, linkId pgtype.UUID, userId pgtype.UUID) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	q := db.New(tx)
+
+	if _, err := q.GetUserLink(ctx, db.GetUserLinkParams{ID: linkId, UserId: userId}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return errLinkNotFound
+		}
+		return err
+	}
+
+	files, err := q.GetLinkFiles(ctx, linkId)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if err := q.CreateDeletedFile(ctx, db.CreateDeletedFileParams{
+			ID:      newID(),
+			FileId:  file.ID,
+			LinkId:  linkId,
+			FileUrl: file.Url,
+		}); err != nil {
+			return err
+		}
+	}
+
+	if err := q.DeleteLink(ctx, db.DeleteLinkParams{UserId: userId, ID: linkId}); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

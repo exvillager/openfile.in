@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/exvillager/nanoserve"
+	"github.com/jackc/pgx/v5/pgtype"
+
 	"github.com/exvillager/openfile.in/internal/response"
 	"github.com/exvillager/openfile.in/internal/service"
 	"github.com/exvillager/openfile.in/internal/util"
@@ -66,4 +68,24 @@ func (lc *LinkController) Create(c *nanoserve.Context) error {
 		"id":    link.ID.String(),
 		"token": link.Token,
 	})
+}
+
+// Delete runs behind RequireAuth. A malformed id is treated like a link the
+// user doesn't own: 404.
+func (lc *LinkController) Delete(c *nanoserve.Context) error {
+	claims := c.Get("claims").(*util.Claims)
+
+	var linkID, userID pgtype.UUID
+	if err := linkID.Scan(c.Param("id")); err != nil {
+		return response.NewApiError("Not Found", http.StatusNotFound)
+	}
+	if err := userID.Scan(claims.ID); err != nil {
+		return response.NewApiError("Unauthorized", http.StatusUnauthorized)
+	}
+
+	if err := lc.link.DeleteLink(c.Request.Context(), linkID, userID); err != nil {
+		return err
+	}
+
+	return c.Status(http.StatusOK).JSON(map[string]string{"message": "link deleted successfully"})
 }
