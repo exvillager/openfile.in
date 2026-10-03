@@ -104,10 +104,7 @@ func validateSignup(req authRequest) error {
 
 // Logout runs behind RequireAuth, which stores the verified token as "token".
 func (ac *AuthController) Logout(c *nanoserve.Context) error {
-	token, ok := c.Get("token").(string)
-	if !ok {
-		return response.NewApiError("Unauthorized", http.StatusUnauthorized)
-	}
+	token := c.Get("token").(string)
 
 	if err := ac.auth.Logout(c.Request.Context(), token); err != nil {
 		return err
@@ -140,10 +137,7 @@ func (ac *AuthController) RefreshToken(c *nanoserve.Context) error {
 
 // Check runs behind RequireAuth, which stores the verified claims as "claims".
 func (ac *AuthController) Check(c *nanoserve.Context) error {
-	claims, ok := c.Get("claims").(*util.Claims)
-	if !ok {
-		return response.NewApiError("Unauthorized", http.StatusUnauthorized)
-	}
+	claims := c.Get("claims").(*util.Claims)
 
 	user, err := ac.auth.CurrentUser(c.Request.Context(), claims.ID)
 	if err != nil {
