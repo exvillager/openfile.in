@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
@@ -19,7 +20,9 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserWithPlan(ctx context.Context, id pgtype.UUID) (GetUserWithPlanRow, error)
+	IncrementUserLinkCount(ctx context.Context, id pgtype.UUID) error
 	Ping(ctx context.Context) (int32, error)
+	ResetUserLinkCount(ctx context.Context, arg ResetUserLinkCountParams) error
 	// Logout keeps the row as a login record and marks it revoked.
 	RevokeSession(ctx context.Context, tokenhash string) error
 	RevokeUserSessions(ctx context.Context, userid pgtype.UUID) error
