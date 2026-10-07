@@ -21,12 +21,15 @@ type Querier interface {
 	DeleteLink(ctx context.Context, arg DeleteLinkParams) error
 	GetActiveSessionByRefreshHash(ctx context.Context, refreshtokenhash string) (Session, error)
 	GetActiveSessionByTokenHash(ctx context.Context, tokenhash string) (Session, error)
+	GetLinkByToken(ctx context.Context, token string) (Link, error)
 	GetLinkFiles(ctx context.Context, uploadlinkid pgtype.UUID) ([]GetLinkFilesRow, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserLink(ctx context.Context, arg GetUserLinkParams) (Link, error)
 	GetUserWithPlan(ctx context.Context, id pgtype.UUID) (GetUserWithPlanRow, error)
 	IncrementUserLinkCount(ctx context.Context, id pgtype.UUID) error
+	// ListUserLinks searches the user's links by name or token, newest first.
+	ListUserLinks(ctx context.Context, arg ListUserLinksParams) ([]ListUserLinksRow, error)
 	Ping(ctx context.Context) (int32, error)
 	ResetUserLinkCount(ctx context.Context, arg ResetUserLinkCountParams) error
 	// Logout keeps the row as a login record and marks it revoked.

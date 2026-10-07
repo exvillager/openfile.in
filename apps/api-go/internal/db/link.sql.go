@@ -80,6 +80,30 @@ func (q *Queries) DeleteLink(ctx context.Context, arg DeleteLinkParams) error {
 	return err
 }
 
+const getLinkByToken = `-- name: GetLinkByToken :one
+SELECT id, token, name, "maxUploads", "uploadCount", "expiresAt", "expireAfterFirstUpload", "userId", "createdAt", "updatedAt" FROM "Link"
+WHERE token = $1
+LIMIT 1
+`
+
+func (q *Queries) GetLinkByToken(ctx context.Context, token string) (Link, error) {
+	row := q.db.QueryRow(ctx, getLinkByToken, token)
+	var i Link
+	err := row.Scan(
+		&i.ID,
+		&i.Token,
+		&i.Name,
+		&i.MaxUploads,
+		&i.UploadCount,
+		&i.ExpiresAt,
+		&i.ExpireAfterFirstUpload,
+		&i.UserId,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserLink = `-- name: GetUserLink :one
 SELECT id, token, name, "maxUploads", "uploadCount", "expiresAt", "expireAfterFirstUpload", "userId", "createdAt", "updatedAt" FROM "Link"
 WHERE id = $1 AND "userId" = $2
@@ -118,6 +142,66 @@ WHERE id = $1
 func (q *Queries) IncrementUserLinkCount(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, incrementUserLinkCount, id)
 	return err
+}
+
+const listUserLinks = `-- name: ListUserLinks :many
+SELECT id, name, token, "createdAt", "maxUploads", "expiresAt", "uploadCount"
+FROM "Link"
+WHERE "userId" = $1
+  AND (name ILIKE '%' || $2::text || '%' OR token ILIKE '%' || $2::text || '%')
+ORDER BY "createdAt" DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListUserLinksParams struct {
+	UserID     pgtype.UUID `json:"user_id"`
+	Query      string      `json:"query"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+type ListUserLinksRow struct {
+	ID          pgtype.UUID      `json:"id"`
+	Name        *string          `json:"name"`
+	Token       string           `json:"token"`
+	CreatedAt   pgtype.Timestamp `json:"createdAt"`
+	MaxUploads  int32            `json:"maxUploads"`
+	ExpiresAt   pgtype.Timestamp `json:"expiresAt"`
+	UploadCount int32            `json:"uploadCount"`
+}
+
+// ListUserLinks searches the user's links by name or token, newest first.
+func (q *Queries) ListUserLinks(ctx context.Context, arg ListUserLinksParams) ([]ListUserLinksRow, error) {
+	rows, err := q.db.Query(ctx, listUserLinks,
+		arg.UserID,
+		arg.Query,
+		arg.PageOffset,
+		arg.PageLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserLinksRow
+	for rows.Next() {
+		var i ListUserLinksRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Token,
+			&i.CreatedAt,
+			&i.MaxUploads,
+			&i.ExpiresAt,
+			&i.UploadCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const resetUserLinkCount = `-- name: ResetUserLinkCount :exec
