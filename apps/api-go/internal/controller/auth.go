@@ -5,12 +5,12 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/exvillager/nanoserve"
 	"github.com/exvillager/openfile.in/internal/config"
 	"github.com/exvillager/openfile.in/internal/dto"
 	"github.com/exvillager/openfile.in/internal/response"
 	"github.com/exvillager/openfile.in/internal/service"
 	"github.com/exvillager/openfile.in/internal/util"
+	"github.com/libsib/nanoserve"
 )
 
 type AuthController struct {

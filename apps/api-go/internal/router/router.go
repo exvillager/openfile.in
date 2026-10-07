@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/exvillager/nanoserve"
 	"github.com/exvillager/openfile.in/internal/controller"
 	"github.com/exvillager/openfile.in/internal/response"
+	"github.com/libsib/nanoserve"
 )
 
 func handleError(c *nanoserve.Context, err error) {

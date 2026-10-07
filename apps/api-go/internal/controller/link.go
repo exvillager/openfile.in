@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/exvillager/nanoserve"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/libsib/nanoserve"
 
 	"github.com/exvillager/openfile.in/internal/response"
 	"github.com/exvillager/openfile.in/internal/service"

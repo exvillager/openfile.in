@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"github.com/exvillager/nanoserve"
 	"github.com/exvillager/openfile.in/internal/service"
+	"github.com/libsib/nanoserve"
 )
 
 type HealthController struct {

@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/exvillager/nanoserve"
 	"github.com/exvillager/openfile.in/internal/response"
 	"github.com/exvillager/openfile.in/internal/service"
+	"github.com/libsib/nanoserve"
 )
 
 var errUnauthorized = response.NewApiError("Unauthorized", http.StatusUnauthorized)
