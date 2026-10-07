@@ -37,9 +37,9 @@ behaviour lives in `apps/backend/src`, so the Go version can match it.
 
 | Status | Route | Node |
 |---|---|---|
-| [ ] | `GET /` (user's links, search + paging) | `fetchUserLinks` + `getUserLinks` |
-| [ ] | `GET /count` | `getLinksCount` |
-| [ ] | `GET /validate` | `validateLink` |
+| [x] | `GET /` (user's links, search + paging) | `fetchUserLinks` + `getUserLinks` |
+| [x] | `GET /count` | `getLinksCount` |
+| [x] | `GET /validate` | `validateLink` |
 | [x] | `POST /` (create link, plan limits) | `generateLink` → `GenerateLinkForUpload` |
 | [x] | `DELETE /:id` | `fetchLinkWithUser` + `deleteLink` |
 
@@ -76,8 +76,8 @@ Node runs these with BullMQ + Redis (`cleanup.service.ts`).
 
 ## Follow-ups and known issues
 
-- [ ] nanoserve: route middleware is attached per path, not per method, so a
-      wrong method returns an empty 200 instead of 404/405 (fix in nanoserve)
+- [x] nanoserve: route middleware leaked across methods and became global on
+      "/", and unmatched routes returned an empty 200. Fixed in libsib/nanoserve v0.2.14
 - [ ] Shorten the access token (5d → ~15m) now that refresh works
 - [ ] Passwords over 72 bytes: confirm how Bun pre-hashes them before cutover
 - [ ] Confirm prod Postgres runs in UTC (session `expiresAt` is a UTC timestamp)

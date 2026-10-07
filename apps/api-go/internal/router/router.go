@@ -64,6 +64,9 @@ func AuthRouter(auth *controller.AuthController, m Middlewares) *nanoserve.NanoS
 
 func LinkRouter(link *controller.LinkController, m Middlewares) *nanoserve.NanoServe {
 	r := newRouter()
+	r.GET("/", m.RequireAuth, link.List)
+	r.GET("/count", m.RequireAuth, link.Count)
+	r.GET("/validate", link.Validate)
 	r.POST("/", m.RequireAuth, link.Create)
 	r.DELETE("/:id", m.RequireAuth, link.Delete)
 	return r

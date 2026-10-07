@@ -190,3 +190,37 @@ func (s *LinkService) DeleteLink(ctx context.Context, linkId pgtype.UUID, userId
 
 	return tx.Commit(ctx)
 }
+
+// CountLinks returns how many links the user currently has.
+func (s *LinkService) CountLinks(ctx context.Context, userId pgtype.UUID) (int64, error) {
+	return s.queries.CountLink(ctx, userId)
+}
+
+// ListLinks returns one page of the user's links, newest first, filtered by
+// name or token.
+func (s *LinkService) ListLinks(ctx context.Context, userId pgtype.UUID, query string, page, limit int32) ([]db.ListUserLinksRow, error) {
+	return s.queries.ListUserLinks(ctx, db.ListUserLinksParams{
+		UserID:     userId,
+		Query:      query,
+		PageOffset: (page - 1) * limit,
+		PageLimit:  limit,
+	})
+}
+
+var errLinkNotValid = response.NewApiError("Link is not valid", http.StatusBadRequest)
+
+// ValidateLink checks that a link token exists and hasn't expired.
+func (s *LinkService) ValidateLink(ctx context.Context, token string) error {
+	link, err := s.queries.GetLinkByToken(ctx, token)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return errLinkNotValid
+	}
+	if err != nil {
+		return err
+	}
+
+	if !link.ExpiresAt.Time.After(time.Now().UTC()) {
+		return errLinkNotValid
+	}
+	return nil
+}
