@@ -17,6 +17,14 @@ type Config struct {
 	AccessTokenExpiry  time.Duration
 	RefreshTokenSecret string
 	RefreshTokenExpiry time.Duration
+
+	// S3-compatible storage. Set StorageEndpoint for R2 or MinIO, leave it
+	// empty for AWS S3.
+	StorageEndpoint  string
+	StorageRegion    string
+	StorageBucket    string
+	StorageAccessKey string
+	StorageSecretKey string
 }
 
 func Load() *Config {
@@ -35,11 +43,24 @@ func Load() *Config {
 		AccessTokenExpiry:  mustDuration("ACCESS_TOKEN_EXPIRY"),
 		RefreshTokenSecret: mustGet("REFRESH_TOKEN_SECRET"),
 		RefreshTokenExpiry: mustDuration("REFRESH_TOKEN_EXPIRY"),
+
+		StorageEndpoint:  getEnv("STORAGE_ENDPOINT"),
+		StorageRegion:    getEnvOr("STORAGE_REGION", "auto"),
+		StorageBucket:    mustGet("STORAGE_BUCKET"),
+		StorageAccessKey: mustGet("STORAGE_ACCESS_KEY"),
+		StorageSecretKey: mustGet("STORAGE_SECRET_KEY"),
 	}
 }
 
 func getEnv(key string) string {
 	return os.Getenv(key)
+}
+
+func getEnvOr(key, def string) string {
+	if val := getEnv(key); val != "" {
+		return val
+	}
+	return def
 }
 
 func mustGet(key string) string {
