@@ -15,6 +15,9 @@ type Querier interface {
 	// One row per file; a sweep that already queued the file is left alone.
 	CreateDeletedFile(ctx context.Context, arg CreateDeletedFileParams) error
 	CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error)
+	// A PENDING row is reserved before the client uploads, so abandoned uploads
+	// can be swept once expiresAt passes. notify-upload confirms it.
+	CreatePendingFile(ctx context.Context, arg CreatePendingFileParams) (File, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)

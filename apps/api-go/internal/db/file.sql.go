@@ -11,6 +11,52 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createPendingFile = `-- name: CreatePendingFile :one
+INSERT INTO "File" (id, url, key, name, size, status, "expiresAt", "userId", "uploadLinkId")
+VALUES ($1, $2, $3, '', $4, 'PENDING', $5, $6, $7)
+RETURNING id, url, key, name, size, "keyUsed", status, "expiresAt", "uploadLinkId", "userId", "createdAt", "updatedAt"
+`
+
+type CreatePendingFileParams struct {
+	ID           pgtype.UUID      `json:"id"`
+	Url          string           `json:"url"`
+	Key          string           `json:"key"`
+	Size         int64            `json:"size"`
+	ExpiresAt    pgtype.Timestamp `json:"expiresAt"`
+	UserId       pgtype.UUID      `json:"userId"`
+	UploadLinkId pgtype.UUID      `json:"uploadLinkId"`
+}
+
+// A PENDING row is reserved before the client uploads, so abandoned uploads
+// can be swept once expiresAt passes. notify-upload confirms it.
+func (q *Queries) CreatePendingFile(ctx context.Context, arg CreatePendingFileParams) (File, error) {
+	row := q.db.QueryRow(ctx, createPendingFile,
+		arg.ID,
+		arg.Url,
+		arg.Key,
+		arg.Size,
+		arg.ExpiresAt,
+		arg.UserId,
+		arg.UploadLinkId,
+	)
+	var i File
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.Key,
+		&i.Name,
+		&i.Size,
+		&i.KeyUsed,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.UploadLinkId,
+		&i.UserId,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getLinkFiles = `-- name: GetLinkFiles :many
 SELECT id, url FROM "File"
 WHERE "uploadLinkId" = $1
