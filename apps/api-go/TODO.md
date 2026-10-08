@@ -51,7 +51,7 @@ behaviour lives in `apps/backend/src`, so the Go version can match it.
 | [ ] | `GET /storage-used` | `storeageUsed` |
 | [ ] | `GET /signed-url` (download) | `getDownloadPresignedUrl` |
 | [x] | `POST /upload-url` (presigned upload) | `UploadRateLimit` + `validateToken` + `validateLinkAccess` |
-| [ ] | `POST /notify-upload` | `validateToken` + `notifyFileUpload` |
+| [x] | `POST /notify-upload` | `validateToken` + `notifyFileUpload` |
 | [ ] | `DELETE /:id/files/:file_id` | `deleteFileFromLink` |
 
 - [x] S3 / R2 client (`s3.service.ts`, `r2.cloudflare.ts`): one S3-compatible client

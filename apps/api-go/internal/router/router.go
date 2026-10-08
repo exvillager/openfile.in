@@ -77,5 +77,6 @@ func LinkRouter(link *controller.LinkController, m Middlewares) *nanoserve.NanoS
 func FileRouter(file *controller.FileController, m Middlewares) *nanoserve.NanoServe {
 	r := newRouter()
 	r.POST("/upload-url", file.UploadURL)
+	r.POST("/notify-upload", file.NotifyUpload)
 	return r
 }

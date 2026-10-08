@@ -40,7 +40,7 @@ func main() {
 		Health: controller.NewHealthController(service.NewHealthService(queries)),
 		Auth:   controller.NewAuthController(authService, cfg),
 		Link:   controller.NewLinkController(service.NewLinkService(pool, queries)),
-		File:   controller.NewFileController(service.NewFileService(queries, storageService)),
+		File:   controller.NewFileController(service.NewFileService(pool, queries, storageService)),
 	}, router.Middlewares{
 		RequireAuth: middleware.RequireAuth(authService),
 	})
