@@ -133,6 +133,25 @@ func (q *Queries) GetUserLink(ctx context.Context, arg GetUserLinkParams) (Link,
 	return i, err
 }
 
+const getUserLinkByIDAndToken = `-- name: GetUserLinkByIDAndToken :one
+SELECT id FROM "Link"
+WHERE id = $1 AND "userId" = $2 AND token = $3
+LIMIT 1
+`
+
+type GetUserLinkByIDAndTokenParams struct {
+	ID     pgtype.UUID `json:"id"`
+	UserId pgtype.UUID `json:"userId"`
+	Token  string      `json:"token"`
+}
+
+func (q *Queries) GetUserLinkByIDAndToken(ctx context.Context, arg GetUserLinkByIDAndTokenParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getUserLinkByIDAndToken, arg.ID, arg.UserId, arg.Token)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const incrementLinkUploadCount = `-- name: IncrementLinkUploadCount :execrows
 UPDATE "Link"
 SET "uploadCount" = "uploadCount" + 1, "updatedAt" = now()

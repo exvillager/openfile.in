@@ -25,18 +25,24 @@ type Querier interface {
 	CreateSubscription(ctx context.Context, arg CreateSubscriptionParams) (Subscription, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteLink(ctx context.Context, arg DeleteLinkParams) error
+	DeleteLinkFile(ctx context.Context, arg DeleteLinkFileParams) (int64, error)
 	GetActiveSessionByRefreshHash(ctx context.Context, refreshtokenhash string) (Session, error)
 	GetActiveSessionByTokenHash(ctx context.Context, tokenhash string) (Session, error)
+	GetConfirmedLinkFile(ctx context.Context, arg GetConfirmedLinkFileParams) (File, error)
 	GetLinkByToken(ctx context.Context, token string) (Link, error)
 	GetLinkFiles(ctx context.Context, uploadlinkid pgtype.UUID) ([]GetLinkFilesRow, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
+	GetUserFile(ctx context.Context, arg GetUserFileParams) (File, error)
 	GetUserLink(ctx context.Context, arg GetUserLinkParams) (Link, error)
+	GetUserLinkByIDAndToken(ctx context.Context, arg GetUserLinkByIDAndTokenParams) (pgtype.UUID, error)
 	GetUserWithPlan(ctx context.Context, id pgtype.UUID) (GetUserWithPlanRow, error)
 	// Counts one more upload only while the link is under maxUploads, so parallel
 	// uploads can't push it past the limit. 0 rows means the link is full.
 	IncrementLinkUploadCount(ctx context.Context, id pgtype.UUID) (int64, error)
 	IncrementUserLinkCount(ctx context.Context, id pgtype.UUID) error
+	// ListLinkFiles returns a link's uploaded (CONFIRMED) files, newest first.
+	ListLinkFiles(ctx context.Context, arg ListLinkFilesParams) ([]ListLinkFilesRow, error)
 	// ListUserLinks searches the user's links by name or token, newest first.
 	ListUserLinks(ctx context.Context, arg ListUserLinksParams) ([]ListUserLinksRow, error)
 	Ping(ctx context.Context) (int32, error)
@@ -47,6 +53,7 @@ type Querier interface {
 	// RotateSession swaps in the new token pair only if the old refresh token
 	// still matches, so two refreshes racing with the same token can't both win.
 	RotateSession(ctx context.Context, arg RotateSessionParams) (int64, error)
+	SumUserStorage(ctx context.Context, userid pgtype.UUID) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

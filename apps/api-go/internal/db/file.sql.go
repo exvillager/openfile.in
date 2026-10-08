@@ -101,6 +101,57 @@ func (q *Queries) CreatePendingFile(ctx context.Context, arg CreatePendingFilePa
 	return i, err
 }
 
+const deleteLinkFile = `-- name: DeleteLinkFile :execrows
+DELETE FROM "File"
+WHERE id = $1 AND "uploadLinkId" = $2 AND "userId" = $3
+`
+
+type DeleteLinkFileParams struct {
+	ID           pgtype.UUID `json:"id"`
+	UploadLinkId pgtype.UUID `json:"uploadLinkId"`
+	UserId       pgtype.UUID `json:"userId"`
+}
+
+func (q *Queries) DeleteLinkFile(ctx context.Context, arg DeleteLinkFileParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteLinkFile, arg.ID, arg.UploadLinkId, arg.UserId)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const getConfirmedLinkFile = `-- name: GetConfirmedLinkFile :one
+SELECT id, url, key, name, size, "keyUsed", status, "expiresAt", "uploadLinkId", "userId", "createdAt", "updatedAt" FROM "File"
+WHERE id = $1 AND "userId" = $2 AND "uploadLinkId" = $3 AND status = 'CONFIRMED'
+LIMIT 1
+`
+
+type GetConfirmedLinkFileParams struct {
+	ID           pgtype.UUID `json:"id"`
+	UserId       pgtype.UUID `json:"userId"`
+	UploadLinkId pgtype.UUID `json:"uploadLinkId"`
+}
+
+func (q *Queries) GetConfirmedLinkFile(ctx context.Context, arg GetConfirmedLinkFileParams) (File, error) {
+	row := q.db.QueryRow(ctx, getConfirmedLinkFile, arg.ID, arg.UserId, arg.UploadLinkId)
+	var i File
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.Key,
+		&i.Name,
+		&i.Size,
+		&i.KeyUsed,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.UploadLinkId,
+		&i.UserId,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getLinkFiles = `-- name: GetLinkFiles :many
 SELECT id, url FROM "File"
 WHERE "uploadLinkId" = $1
@@ -129,4 +180,97 @@ func (q *Queries) GetLinkFiles(ctx context.Context, uploadlinkid pgtype.UUID) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const getUserFile = `-- name: GetUserFile :one
+SELECT id, url, key, name, size, "keyUsed", status, "expiresAt", "uploadLinkId", "userId", "createdAt", "updatedAt" FROM "File"
+WHERE id = $1 AND "userId" = $2
+LIMIT 1
+`
+
+type GetUserFileParams struct {
+	ID     pgtype.UUID `json:"id"`
+	UserId pgtype.UUID `json:"userId"`
+}
+
+func (q *Queries) GetUserFile(ctx context.Context, arg GetUserFileParams) (File, error) {
+	row := q.db.QueryRow(ctx, getUserFile, arg.ID, arg.UserId)
+	var i File
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.Key,
+		&i.Name,
+		&i.Size,
+		&i.KeyUsed,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.UploadLinkId,
+		&i.UserId,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listLinkFiles = `-- name: ListLinkFiles :many
+SELECT id, name, url, size, "createdAt"
+FROM "File"
+WHERE "uploadLinkId" = $1 AND status = 'CONFIRMED'
+ORDER BY "createdAt" DESC
+LIMIT $3 OFFSET $2
+`
+
+type ListLinkFilesParams struct {
+	LinkID     pgtype.UUID `json:"link_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+type ListLinkFilesRow struct {
+	ID        pgtype.UUID      `json:"id"`
+	Name      string           `json:"name"`
+	Url       string           `json:"url"`
+	Size      int64            `json:"size"`
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
+}
+
+// ListLinkFiles returns a link's uploaded (CONFIRMED) files, newest first.
+func (q *Queries) ListLinkFiles(ctx context.Context, arg ListLinkFilesParams) ([]ListLinkFilesRow, error) {
+	rows, err := q.db.Query(ctx, listLinkFiles, arg.LinkID, arg.PageOffset, arg.PageLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListLinkFilesRow
+	for rows.Next() {
+		var i ListLinkFilesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Url,
+			&i.Size,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sumUserStorage = `-- name: SumUserStorage :one
+SELECT COALESCE(SUM(size), 0)::bigint AS total
+FROM "File"
+WHERE "userId" = $1 AND status = 'CONFIRMED'
+`
+
+func (q *Queries) SumUserStorage(ctx context.Context, userid pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, sumUserStorage, userid)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
 }

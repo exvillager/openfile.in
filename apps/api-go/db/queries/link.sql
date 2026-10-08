@@ -46,3 +46,8 @@ LIMIT 1;
 UPDATE "Link"
 SET "uploadCount" = "uploadCount" + 1, "updatedAt" = now()
 WHERE id = $1 AND "uploadCount" < "maxUploads";
+
+-- name: GetUserLinkByIDAndToken :one
+SELECT id FROM "Link"
+WHERE id = $1 AND "userId" = $2 AND token = $3
+LIMIT 1;
