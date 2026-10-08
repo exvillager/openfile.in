@@ -11,6 +11,50 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const confirmPendingFile = `-- name: ConfirmPendingFile :one
+UPDATE "File"
+SET name = $1, status = 'CONFIRMED', "expiresAt" = NULL, "updatedAt" = now()
+WHERE key = $2
+  AND "uploadLinkId" = $3
+  AND "userId" = $4
+  AND status = 'PENDING'
+RETURNING id, url, key, name, size, "keyUsed", status, "expiresAt", "uploadLinkId", "userId", "createdAt", "updatedAt"
+`
+
+type ConfirmPendingFileParams struct {
+	Name   string      `json:"name"`
+	Key    string      `json:"key"`
+	LinkID pgtype.UUID `json:"link_id"`
+	UserID pgtype.UUID `json:"user_id"`
+}
+
+// Size isn't taken from the client: the upload URL was signed for the
+// PENDING row's size, so that is the real size.
+func (q *Queries) ConfirmPendingFile(ctx context.Context, arg ConfirmPendingFileParams) (File, error) {
+	row := q.db.QueryRow(ctx, confirmPendingFile,
+		arg.Name,
+		arg.Key,
+		arg.LinkID,
+		arg.UserID,
+	)
+	var i File
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.Key,
+		&i.Name,
+		&i.Size,
+		&i.KeyUsed,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.UploadLinkId,
+		&i.UserId,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createPendingFile = `-- name: CreatePendingFile :one
 INSERT INTO "File" (id, url, key, name, size, status, "expiresAt", "userId", "uploadLinkId")
 VALUES ($1, $2, $3, '', $4, 'PENDING', $5, $6, $7)

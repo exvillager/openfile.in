@@ -133,6 +133,22 @@ func (q *Queries) GetUserLink(ctx context.Context, arg GetUserLinkParams) (Link,
 	return i, err
 }
 
+const incrementLinkUploadCount = `-- name: IncrementLinkUploadCount :execrows
+UPDATE "Link"
+SET "uploadCount" = "uploadCount" + 1, "updatedAt" = now()
+WHERE id = $1 AND "uploadCount" < "maxUploads"
+`
+
+// Counts one more upload only while the link is under maxUploads, so parallel
+// uploads can't push it past the limit. 0 rows means the link is full.
+func (q *Queries) IncrementLinkUploadCount(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, incrementLinkUploadCount, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const incrementUserLinkCount = `-- name: IncrementUserLinkCount :exec
 UPDATE "User"
 SET "linkCount" = "linkCount" + 1

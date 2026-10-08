@@ -39,3 +39,10 @@ LIMIT @page_limit OFFSET @page_offset;
 SELECT * FROM "Link"
 WHERE token = $1
 LIMIT 1;
+
+-- Counts one more upload only while the link is under maxUploads, so parallel
+-- uploads can't push it past the limit. 0 rows means the link is full.
+-- name: IncrementLinkUploadCount :execrows
+UPDATE "Link"
+SET "uploadCount" = "uploadCount" + 1, "updatedAt" = now()
+WHERE id = $1 AND "uploadCount" < "maxUploads";

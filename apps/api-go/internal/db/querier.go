@@ -11,6 +11,9 @@ import (
 )
 
 type Querier interface {
+	// Size isn't taken from the client: the upload URL was signed for the
+	// PENDING row's size, so that is the real size.
+	ConfirmPendingFile(ctx context.Context, arg ConfirmPendingFileParams) (File, error)
 	CountLink(ctx context.Context, userid pgtype.UUID) (int64, error)
 	// One row per file; a sweep that already queued the file is left alone.
 	CreateDeletedFile(ctx context.Context, arg CreateDeletedFileParams) error
@@ -30,6 +33,9 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserLink(ctx context.Context, arg GetUserLinkParams) (Link, error)
 	GetUserWithPlan(ctx context.Context, id pgtype.UUID) (GetUserWithPlanRow, error)
+	// Counts one more upload only while the link is under maxUploads, so parallel
+	// uploads can't push it past the limit. 0 rows means the link is full.
+	IncrementLinkUploadCount(ctx context.Context, id pgtype.UUID) (int64, error)
 	IncrementUserLinkCount(ctx context.Context, id pgtype.UUID) error
 	// ListUserLinks searches the user's links by name or token, newest first.
 	ListUserLinks(ctx context.Context, arg ListUserLinksParams) ([]ListUserLinksRow, error)
