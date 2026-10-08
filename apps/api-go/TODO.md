@@ -47,12 +47,12 @@ behaviour lives in `apps/backend/src`, so the Go version can match it.
 
 | Status | Route | Node |
 |---|---|---|
-| [ ] | `GET /:id/:token/files` | `fetchFilesByTokenMiddleware` + `getFilesByLinkToken` |
-| [ ] | `GET /storage-used` | `storeageUsed` |
-| [ ] | `GET /signed-url` (download) | `getDownloadPresignedUrl` |
+| [x] | `GET /:id/:token/files` | `fetchFilesByTokenMiddleware` + `getFilesByLinkToken` |
+| [x] | `GET /storage-used` | `storeageUsed` |
+| [x] | `GET /signed-url` (download) | `getDownloadPresignedUrl` |
 | [x] | `POST /upload-url` (presigned upload) | `UploadRateLimit` + `validateToken` + `validateLinkAccess` |
 | [x] | `POST /notify-upload` | `validateToken` + `notifyFileUpload` |
-| [ ] | `DELETE /:id/files/:file_id` | `deleteFileFromLink` |
+| [x] | `DELETE /:id/files/:file_id` | `deleteFileFromLink` |
 
 - [x] S3 / R2 client (`s3.service.ts`, `r2.cloudflare.ts`): one S3-compatible client
 - [x] Local MinIO in `compose.local.yml`

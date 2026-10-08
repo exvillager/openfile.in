@@ -78,5 +78,9 @@ func FileRouter(file *controller.FileController, m Middlewares) *nanoserve.NanoS
 	r := newRouter()
 	r.POST("/upload-url", file.UploadURL)
 	r.POST("/notify-upload", file.NotifyUpload)
+	r.GET("/:id/:token/files", m.RequireAuth, file.ListLinkFiles)
+	r.GET("/signed-url", m.RequireAuth, file.DownloadURL)
+	r.GET("/storage-used", m.RequireAuth, file.StorageUsed)
+	r.DELETE("/:id/files/:file_id", m.RequireAuth, file.DeleteFile)
 	return r
 }

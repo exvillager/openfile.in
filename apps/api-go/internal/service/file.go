@@ -22,6 +22,11 @@ var (
 	errLinkNotFoundOrExpired = response.NewApiError("Link not found or expired", http.StatusNotFound)
 	errUploadNotAllowed      = response.NewApiError("Unable to process upload at this time.", http.StatusForbidden)
 	errNoPendingUpload       = response.NewApiError("No pending upload found for this key.", http.StatusNotFound)
+	errNoFilesOrUnauthorized = response.NewApiError("No files found or unauthorized access", http.StatusNotFound)
+	errInvalidLink           = response.NewApiError("Invalid link or unauthorized", http.StatusNotFound)
+	errFileNotFound          = response.NewApiError("File not found or unauthorized", http.StatusNotFound)
+	errLinkGone              = response.NewApiError("Link is expired or doesn't exist.", http.StatusNotFound)
+	errFileGone              = response.NewApiError("File doesn't exist or Unauthorized", http.StatusNotFound)
 )
 
 type FileService struct {
@@ -121,6 +126,109 @@ func (s *FileService) ConfirmUpload(ctx context.Context, token, key, name string
 			return errNoPendingUpload
 		}
 		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+// ListLinkFiles returns one page of a link's uploaded files. The link must
+// belong to the user and match both its id and token, like the Node backend.
+func (s *FileService) ListLinkFiles(ctx context.Context, userID, linkID pgtype.UUID, token string, page, limit int32) ([]db.ListLinkFilesRow, error) {
+	if _, err := s.queries.GetUserLinkByIDAndToken(ctx, db.GetUserLinkByIDAndTokenParams{
+		ID:     linkID,
+		UserId: userID,
+		Token:  token,
+	}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errNoFilesOrUnauthorized
+		}
+		return nil, err
+	}
+
+	return s.queries.ListLinkFiles(ctx, db.ListLinkFilesParams{
+		LinkID:     linkID,
+		PageOffset: (page - 1) * limit,
+		PageLimit:  limit,
+	})
+}
+
+// DownloadURL returns a temporary download URL for one of the user's
+// uploaded files on the link with this token.
+func (s *FileService) DownloadURL(ctx context.Context, userID pgtype.UUID, token string, fileID pgtype.UUID) (string, error) {
+	link, err := s.queries.GetLinkByToken(ctx, token)
+	if errors.Is(err, pgx.ErrNoRows) || (err == nil && link.UserId != userID) {
+		return "", errInvalidLink
+	}
+	if err != nil {
+		return "", err
+	}
+
+	file, err := s.queries.GetConfirmedLinkFile(ctx, db.GetConfirmedLinkFileParams{
+		ID:           fileID,
+		UserId:       userID,
+		UploadLinkId: link.ID,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", errFileNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return s.storage.PresignDownload(ctx, file.Key)
+}
+
+// StorageUsed returns the total bytes of the user's uploaded files.
+func (s *FileService) StorageUsed(ctx context.Context, userID pgtype.UUID) (int64, error) {
+	return s.queries.SumUserStorage(ctx, userID)
+}
+
+// DeleteFile removes one file from a user's link. Like DeleteLink, it first
+// queues the object in DeletedFile for the delete worker, all in one
+// transaction. uploadCount isn't decremented: it counts uploads over the
+// link's lifetime.
+func (s *FileService) DeleteFile(ctx context.Context, userID, linkID, fileID pgtype.UUID) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	q := db.New(tx)
+
+	if _, err := q.GetUserLink(ctx, db.GetUserLinkParams{ID: linkID, UserId: userID}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return errLinkGone
+		}
+		return err
+	}
+
+	file, err := q.GetUserFile(ctx, db.GetUserFileParams{ID: fileID, UserId: userID})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return errFileGone
+	}
+	if err != nil {
+		return err
+	}
+	if file.UploadLinkId != linkID {
+		return response.NewApiError("Unauthorized", http.StatusForbidden)
+	}
+
+	if err := q.CreateDeletedFile(ctx, db.CreateDeletedFileParams{
+		ID:      newID(),
+		FileId:  file.ID,
+		LinkId:  linkID,
+		FileUrl: file.Url,
+	}); err != nil {
+		return err
+	}
+
+	deleted, err := q.DeleteLinkFile(ctx, db.DeleteLinkFileParams{ID: fileID, UploadLinkId: linkID, UserId: userID})
+	if err != nil {
+		return err
+	}
+	if deleted == 0 {
+		return response.NewApiError("Failed to delete file.", http.StatusInternalServerError)
 	}
 
 	return tx.Commit(ctx)
