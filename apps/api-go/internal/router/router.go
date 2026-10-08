@@ -25,6 +25,7 @@ type Controllers struct {
 	Health *controller.HealthController
 	Auth   *controller.AuthController
 	Link   *controller.LinkController
+	File   *controller.FileController
 }
 
 // newRouter returns a nanoserve instance that reports errors with handleError.
@@ -49,6 +50,7 @@ func New(c Controllers, m Middlewares) *nanoserve.NanoServe {
 	// sub routes application
 	app.Sub("/api/v1/auth/*", AuthRouter(c.Auth, m))
 	app.Sub("/api/v1/link/*", LinkRouter(c.Link, m))
+	app.Sub("/api/v1/file/*", FileRouter(c.File, m))
 	return app
 }
 
@@ -69,5 +71,11 @@ func LinkRouter(link *controller.LinkController, m Middlewares) *nanoserve.NanoS
 	r.GET("/validate", link.Validate)
 	r.POST("/", m.RequireAuth, link.Create)
 	r.DELETE("/:id", m.RequireAuth, link.Delete)
+	return r
+}
+
+func FileRouter(file *controller.FileController, m Middlewares) *nanoserve.NanoServe {
+	r := newRouter()
+	r.POST("/upload-url", file.UploadURL)
 	return r
 }

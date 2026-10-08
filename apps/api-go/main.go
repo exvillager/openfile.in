@@ -34,11 +34,13 @@ func main() {
 	queries := db.New(pool)
 
 	authService := service.NewAuthService(pool, queries, cfg)
+	storageService := service.NewStorageService(cfg)
 
 	app := router.New(router.Controllers{
 		Health: controller.NewHealthController(service.NewHealthService(queries)),
 		Auth:   controller.NewAuthController(authService, cfg),
 		Link:   controller.NewLinkController(service.NewLinkService(pool, queries)),
+		File:   controller.NewFileController(service.NewFileService(queries, storageService)),
 	}, router.Middlewares{
 		RequireAuth: middleware.RequireAuth(authService),
 	})

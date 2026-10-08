@@ -9,7 +9,7 @@ behaviour lives in `apps/backend/src`, so the Go version can match it.
 - [x] Postgres pool (pgx) + sqlc
 - [x] Migrations on startup (golang-migrate, embedded)
 - [x] `scripts/db-gen.sh` (atlas diff + sqlc generate)
-- [x] Local Postgres (`compose.local.yml`)
+- [x] Local Postgres + MinIO (`compose.local.yml`, ports 5434 / 9100)
 - [x] Error handler (`ApiError` → JSON) for app and sub-routers
 - [x] `GET /health`
 - [ ] CORS (allowed origins + credentials), like `app.ts`
@@ -50,11 +50,12 @@ behaviour lives in `apps/backend/src`, so the Go version can match it.
 | [ ] | `GET /:id/:token/files` | `fetchFilesByTokenMiddleware` + `getFilesByLinkToken` |
 | [ ] | `GET /storage-used` | `storeageUsed` |
 | [ ] | `GET /signed-url` (download) | `getDownloadPresignedUrl` |
-| [ ] | `POST /upload-url` (presigned upload) | `UploadRateLimit` + `validateToken` + `validateLinkAccess` |
+| [x] | `POST /upload-url` (presigned upload) | `UploadRateLimit` + `validateToken` + `validateLinkAccess` |
 | [ ] | `POST /notify-upload` | `validateToken` + `notifyFileUpload` |
 | [ ] | `DELETE /:id/files/:file_id` | `deleteFileFromLink` |
 
-- [ ] S3 / R2 client (`s3.service.ts`, `r2.cloudflare.ts`)
+- [x] S3 / R2 client (`s3.service.ts`, `r2.cloudflare.ts`): one S3-compatible client
+- [x] Local MinIO in `compose.local.yml`
 - [ ] Upload rate limit
 
 ## Background jobs
