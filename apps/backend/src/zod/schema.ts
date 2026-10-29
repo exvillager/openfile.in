@@ -52,8 +52,8 @@ export const uploadRequestSchema = z.object({
   mimeType: z.string().optional().default("application/octet-stream"),
   fileSize: z
     .number({
-      required_error: "File size is required.",
-      invalid_type_error: "File size must be a number.",
+      error: (issue) =>
+        issue.input === undefined ? "File size is required." : "File size must be a number.",
     })
     .int("File size must be a whole number of bytes.")
     .positive("File size must be greater than zero.")
@@ -64,8 +64,8 @@ export const notifyUploadSchema = z.object({
   s3Key: z.string().min(1, "s3Key required"),
   fileSize: z
     .number({
-      required_error: "File size is required.",
-      invalid_type_error: "File size must be a number.",
+      error: (issue) =>
+        issue.input === undefined ? "File size is required." : "File size must be a number.",
     })
     .positive("File size must be greater than zero.")
     .max(MAX_UPLOAD_FILE_SIZE, "File size exceeds the maximum allowed limit."),

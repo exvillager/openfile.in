@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { NBCard, nbButtonClass, nbInputClass, nbLabelClass } from "~/components/ui/neobrutal";
 
 const createLinkSchema = z.object({
-  maxUploads: z.number({ required_error: "Max uploads is required" }).min(1),
+  maxUploads: z.number({ error: "Max uploads is required" }).min(1),
   allowedFileType: z.array(z.string()).optional(),
   expiresAt: z.string().datetime().optional(),
   name: z.string().optional(),

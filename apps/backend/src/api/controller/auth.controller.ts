@@ -51,7 +51,7 @@ export class DieselAuthController {
       const body = await c.body;
       const result = registerSchema.safeParse(body);
       if (!result.success) {
-        const message = result.error!.errors[0].message;
+        const message = result.error!.issues[0].message;
         throw new HTTPException(400, { res: c.json({ error: message }, 400) });
       }
       const { username, password } = result.data!;
@@ -72,7 +72,7 @@ export class DieselAuthController {
       const body = await c.body;
       const result = loginSchema.safeParse(body);
       if (!result.success) {
-        const message = result.error.errors[0].message;
+        const message = result.error.issues[0].message;
         throw new HTTPException(400, { res: c.json({ error: message }, 400) });
       }
       const { username, password } = result.data;

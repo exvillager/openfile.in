@@ -6,7 +6,7 @@ export const AuthSchema = z.object({
 });
 
 export const createLinkSchema = z.object({
-  maxUploads: z.number({ required_error: "Max uploads is required" }).min(1),
+  maxUploads: z.number({ error: "Max uploads is required" }).min(1),
   allowedFileType: z.array(z.string()).optional(),
   expiresAt: z.string().datetime().optional(),
   secretKey: z.string().min(1),
