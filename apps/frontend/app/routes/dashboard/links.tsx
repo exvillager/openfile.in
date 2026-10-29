@@ -1,5 +1,5 @@
 import { useLinkCount, useStorageUsedQuery, useUserLinksQuery } from "~/service/api";
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch } from "react-icons/fi";
 import UserLinks from "~/components/user-links";
 import UserStats from "~/components/user-stats";
 import Spinner from "~/components/spinner";
@@ -8,12 +8,16 @@ import { nbButtonClass, nbInputClass } from "~/components/ui/neobrutal";
 
 function Profile() {
   const [page, setPage] = useState<number>(1);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebounceSearch] = useState<string | null>(null);
 
   const limit = 10;
   const { data, isLoading, isError, refetch } = useUserLinksQuery(page, searchText, limit);
-  const { data: storageUsed, isLoading: storageUsedLoading, error: storageUsedError } = useStorageUsedQuery();
+  const {
+    data: storageUsed,
+    isLoading: storageUsedLoading,
+    error: storageUsedError,
+  } = useStorageUsedQuery();
   const { data: LinkCounts } = useLinkCount();
 
   useEffect(() => {
@@ -21,23 +25,31 @@ function Profile() {
     return () => clearTimeout(handler);
   }, [searchText]);
 
-  useEffect(() => { refetch(); }, [page, debouncedSearch]);
+  useEffect(() => {
+    refetch();
+  }, [page, debouncedSearch]);
 
-  if (isLoading) return (
-    <div className="min-h-screen flex justify-center items-center">
-      <Spinner size={28} color="black" />
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <Spinner size={28} color="black" />
+      </div>
+    );
 
-  if (isError) return (
-    <div className="min-h-screen flex justify-center items-center">
-      <p className="text-red-600 font-bold text-sm">Error loading links. Please try again later.</p>
-    </div>
-  );
+  if (isError)
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <p className="text-red-600 font-bold text-sm">
+          Error loading links. Please try again later.
+        </p>
+      </div>
+    );
 
   const { data: links, totalPages, page: currentPage } = data;
 
-  const handleRefresh = async () => { await refetch(); };
+  const handleRefresh = async () => {
+    await refetch();
+  };
   const loadNextPage = () => setPage((prev) => prev + 1);
   const loadPrevPage = () => setPage((prev) => prev - 1);
 
@@ -69,7 +81,7 @@ function Profile() {
       {totalPages > 1 && (
         <div className="mt-6 flex justify-center items-center gap-3">
           <button
-            className={nbButtonClass({ color: 'white', size: 'sm' })}
+            className={nbButtonClass({ color: "white", size: "sm" })}
             onClick={loadPrevPage}
             disabled={page === 1}
           >
@@ -79,7 +91,7 @@ function Profile() {
             Page {currentPage} of {totalPages}
           </span>
           <button
-            className={nbButtonClass({ color: 'white', size: 'sm' })}
+            className={nbButtonClass({ color: "white", size: "sm" })}
             onClick={loadNextPage}
             disabled={page === totalPages}
           >

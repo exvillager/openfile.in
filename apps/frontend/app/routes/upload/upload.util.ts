@@ -3,13 +3,11 @@
 // const { mutateAsync: uploadFilesMutation, isPending: isUploading } = useUploadS3Mutation();
 // const { mutateAsync: UpdateDbS3 } = useUpdateS3UploadDB();
 
-
 export const encryptFileWithWorker = (file: File, secretKey: string, iv: string): Promise<Blob> => {
   return new Promise((resolve, reject) => {
-    const worker = new Worker(
-      new URL("../../utils/encryptWorker.ts", import.meta.url),
-      { type: "module" }
-    );
+    const worker = new Worker(new URL("../../utils/encryptWorker.ts", import.meta.url), {
+      type: "module",
+    });
     worker.onmessage = (event) => {
       worker.terminate();
       event.data.error ? reject(event.data.error) : resolve(event.data);
@@ -44,17 +42,15 @@ export const encryptFileWithWorker = (file: File, secretKey: string, iv: string)
 //   }
 // };
 
-
 // export const parallerUpload = async (files:File[], fileStatusList: File[], key: string, iv: string, token: string, updateStatus: any, setError: any) => {
 //   const uploadPromises = files.map(file => uploadSingleFile(file,).catch(e => e));
 //     await Promise.all(uploadPromises);
 // }
 
-
 export const getHashParams = (hash: string) => {
   const hashParams = new URLSearchParams(hash.slice(1));
   return {
     key: hashParams.get("key") || "",
-    iv: hashParams.get("iv") || ""
+    iv: hashParams.get("iv") || "",
   };
 };

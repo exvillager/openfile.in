@@ -1,7 +1,6 @@
 // import { PrismaClient } from "../generated/prisma";
 // import { IDeleteFileRepo } from "../interface/delete-file.interface";
 
-
 // export class DeletedFileRepository implements IDeleteFileRepo {
 //     private static instance: DeletedFileRepository
 //     private client: PrismaClient

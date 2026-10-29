@@ -2,7 +2,6 @@
 // import { ILinkRepo } from "../interface/link.interface";
 // import { ONE_DAY } from "../service/link.service";
 
-
 // export class LinkRepository implements ILinkRepo{
 //     private static instance: LinkRepository
 //     private client: PrismaClient;
@@ -101,7 +100,6 @@
 //             }
 //         });
 //     }
-
 
 //     findUserLinks = async (userId: number, query: string, skip: number, limit: number) => {
 //         return await this.client.link.findMany({

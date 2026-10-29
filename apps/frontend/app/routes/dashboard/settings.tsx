@@ -1,5 +1,5 @@
-import { Settings } from 'lucide-react'
-import { NBCard } from '~/components/ui/neobrutal'
+import { Settings } from "lucide-react";
+import { NBCard } from "~/components/ui/neobrutal";
 
 function SettingsPage() {
   return (
@@ -9,10 +9,12 @@ function SettingsPage() {
           <Settings size={20} />
         </div>
         <p className="text-black font-extrabold mb-1">Settings coming soon</p>
-        <p className="text-black/60 text-sm font-medium">Account settings aren't available yet — check back later.</p>
+        <p className="text-black/60 text-sm font-medium">
+          Account settings aren't available yet — check back later.
+        </p>
       </NBCard>
     </div>
-  )
+  );
 }
 
-export default SettingsPage
+export default SettingsPage;

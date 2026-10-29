@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 function Features() {
   return (
@@ -12,12 +12,14 @@ function Features() {
           </div>
           <div className="p-6 bg-[#292942] border border-[#333] rounded-xl shadow hover:shadow-lg transition">
             <h4 className="text-xl font-semibold mb-2">🌐 Anonymous</h4>
-            <p className="text-gray-400">Share files without revealing identity. No account required for uploaders.</p>
+            <p className="text-gray-400">
+              Share files without revealing identity. No account required for uploaders.
+            </p>
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default React.memo(Features)
+export default React.memo(Features);

@@ -1,7 +1,6 @@
 // import { deleteQueue } from "../queue/bullmq/queue/delete-files.queue";
 // import { DrizzleClient } from "../repository/user.drizzle";
 
-
 // export const cleanupExpiredLinks = async (db?: DrizzleClient) => {
 //     try {
 //         let totalLinks = await db.link.count({
@@ -68,7 +67,6 @@
 // // console.log('clean up job scheduled')
 
 // // setInterval(cleanupExpiredLinks, 10 * 60 * 1000);
-
 
 // // let runLoop = true
 

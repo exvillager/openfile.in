@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { FaLock, FaUserSecret, FaShareAlt, FaUpload } from 'react-icons/fa';
+import React from "react";
+import { FaLock, FaUserSecret, FaShareAlt, FaUpload } from "react-icons/fa";
 
 export default function LandingPage() {
   return (
@@ -9,9 +8,15 @@ export default function LandingPage() {
       <header className="flex items-center justify-between px-6 py-4 shadow-md bg-slate-800/70 backdrop-blur">
         <h1 className="text-2xl font-bold text-white tracking-tight">OpenFile</h1>
         <nav className="space-x-4 text-sm font-medium">
-          <a href="#features" className="hover:text-blue-400">Features</a>
-          <a href="#how" className="hover:text-blue-400">How it Works</a>
-          <a href="#get-started" className="hover:text-blue-400">Get Started</a>
+          <a href="#features" className="hover:text-blue-400">
+            Features
+          </a>
+          <a href="#how" className="hover:text-blue-400">
+            How it Works
+          </a>
+          <a href="#get-started" className="hover:text-blue-400">
+            Get Started
+          </a>
         </nav>
       </header>
 
@@ -21,7 +26,8 @@ export default function LandingPage() {
           Share Secure Upload Links, Not Your Privacy.
         </h2>
         <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 text-slate-300">
-          OpenFile lets you generate a secure, one-time upload link so others can send files <strong>only you</strong> can access — end-to-end encrypted, privacy-first, zero-trust.
+          OpenFile lets you generate a secure, one-time upload link so others can send files{" "}
+          <strong>only you</strong> can access — end-to-end encrypted, privacy-first, zero-trust.
         </p>
         <a
           href="/dashboard"
@@ -38,22 +44,30 @@ export default function LandingPage() {
           <div>
             <FaLock className="mx-auto text-blue-500 text-3xl mb-3" />
             <h4 className="font-semibold text-lg mb-2">Zero-Knowledge</h4>
-            <p className="text-slate-300 text-sm">Only you hold the decryption key. Even we can't read your files.</p>
+            <p className="text-slate-300 text-sm">
+              Only you hold the decryption key. Even we can't read your files.
+            </p>
           </div>
           <div>
             <FaUserSecret className="mx-auto text-blue-500 text-3xl mb-3" />
             <h4 className="font-semibold text-lg mb-2">Private Upload Links</h4>
-            <p className="text-slate-300 text-sm">Create links that expire or allow one-time use, securely.</p>
+            <p className="text-slate-300 text-sm">
+              Create links that expire or allow one-time use, securely.
+            </p>
           </div>
           <div>
             <FaShareAlt className="mx-auto text-blue-500 text-3xl mb-3" />
             <h4 className="font-semibold text-lg mb-2">Controlled Sharing</h4>
-            <p className="text-slate-300 text-sm">Others can upload, but can’t view or download what they sent.</p>
+            <p className="text-slate-300 text-sm">
+              Others can upload, but can’t view or download what they sent.
+            </p>
           </div>
           <div>
             <FaUpload className="mx-auto text-blue-500 text-3xl mb-3" />
             <h4 className="font-semibold text-lg mb-2">Simple & Secure</h4>
-            <p className="text-slate-300 text-sm">No signup needed to upload. Files go directly to your dashboard.</p>
+            <p className="text-slate-300 text-sm">
+              No signup needed to upload. Files go directly to your dashboard.
+            </p>
           </div>
         </div>
       </section>
@@ -62,17 +76,28 @@ export default function LandingPage() {
       <section id="how" className="py-20 px-6 text-center">
         <h3 className="text-3xl font-bold mb-10">How It Works</h3>
         <ol className="space-y-6 text-slate-300 max-w-2xl mx-auto text-left text-lg">
-          <li>1. <strong>Create</strong> an account and generate an upload link.</li>
-          <li>2. <strong>Send</strong> the link to the person who needs to send you files.</li>
-          <li>3. <strong>They Upload</strong> the files — encrypted and protected.</li>
-          <li>4. <strong>You Receive</strong> the files in your private dashboard. Only you can decrypt.</li>
+          <li>
+            1. <strong>Create</strong> an account and generate an upload link.
+          </li>
+          <li>
+            2. <strong>Send</strong> the link to the person who needs to send you files.
+          </li>
+          <li>
+            3. <strong>They Upload</strong> the files — encrypted and protected.
+          </li>
+          <li>
+            4. <strong>You Receive</strong> the files in your private dashboard. Only you can
+            decrypt.
+          </li>
         </ol>
       </section>
 
       {/* Call to Action */}
       <section id="get-started" className="bg-blue-700 py-16 text-center">
         <h3 className="text-3xl font-bold mb-4 text-white">Start Receiving Private Files Now</h3>
-        <p className="mb-6 text-white/90">Sign up and start generating secure upload links in seconds.</p>
+        <p className="mb-6 text-white/90">
+          Sign up and start generating secure upload links in seconds.
+        </p>
         <a
           href="/register"
           className="inline-block px-6 py-3 bg-white text-blue-700 font-semibold rounded-xl hover:bg-slate-100 transition"

@@ -1,11 +1,11 @@
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-gesture-handler';
-import 'react-native-reanimated';
-import './global.css'
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import "react-native-gesture-handler";
+import "react-native-reanimated";
+import "./global.css";
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { COLORS } from '@/src/constant';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { COLORS } from "@/src/constant";
 
 const queryClient = new QueryClient();
 

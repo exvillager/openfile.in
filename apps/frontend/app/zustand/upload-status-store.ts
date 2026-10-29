@@ -22,21 +22,17 @@ export const useUploadStatusStore = create<UploadStatusStore>((set) => ({
 
   addFile: (file) =>
     set((state) => ({
-      uploads: [...state.uploads.filter(f => f.id !== file.id), file],
+      uploads: [...state.uploads.filter((f) => f.id !== file.id), file],
     })),
 
   updateProgress: (id, progress) =>
     set((state) => ({
-      uploads: state.uploads.map((f) =>
-        f.id === id ? { ...f, progress } : f
-      ),
+      uploads: state.uploads.map((f) => (f.id === id ? { ...f, progress } : f)),
     })),
 
   updateStatus: (id, status) =>
     set((state) => ({
-      uploads: state.uploads.map((f) =>
-        f.id === id ? { ...f, status } : f
-      ),
+      uploads: state.uploads.map((f) => (f.id === id ? { ...f, status } : f)),
     })),
 
   setError: (id, err) =>

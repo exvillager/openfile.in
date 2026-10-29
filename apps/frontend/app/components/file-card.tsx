@@ -1,5 +1,5 @@
 import { Download, Eye, EyeOff, MoreVertical, Trash2 } from "lucide-react";
-import { filesize } from 'filesize';
+import { filesize } from "filesize";
 import type { FileItem } from "types/types";
 import { useEffect, useRef, useState } from "react";
 import { decryptAndDownloadFileWithCrypto } from "~/utils/encrypt-decrypt";
@@ -20,21 +20,21 @@ type FileCardProps = {
 };
 
 function getFileExt(name: string) {
-  return name.split('.').pop()?.toUpperCase() ?? 'FILE';
+  return name.split(".").pop()?.toUpperCase() ?? "FILE";
 }
 
 function getExtColor(ext: string): string {
-  const images = ['JPG', 'JPEG', 'PNG', 'GIF', 'WEBP', 'SVG', 'AVIF'];
-  const videos = ['MP4', 'MOV', 'AVI', 'MKV', 'WEBM'];
-  const docs = ['PDF', 'DOC', 'DOCX', 'TXT', 'MD'];
-  const code = ['JS', 'TS', 'TSX', 'JSX', 'PY', 'GO', 'RS', 'JSON'];
-  const archives = ['ZIP', 'RAR', 'TAR', 'GZ', '7Z'];
-  if (images.includes(ext)) return 'bg-[#6EC1FF]';
-  if (videos.includes(ext)) return 'bg-[#FF6FA5]';
-  if (docs.includes(ext)) return 'bg-[#FFD400]';
-  if (code.includes(ext)) return 'bg-[#A3FF66]';
-  if (archives.includes(ext)) return 'bg-[#FFD400]';
-  return 'bg-[#FFF8E7]';
+  const images = ["JPG", "JPEG", "PNG", "GIF", "WEBP", "SVG", "AVIF"];
+  const videos = ["MP4", "MOV", "AVI", "MKV", "WEBM"];
+  const docs = ["PDF", "DOC", "DOCX", "TXT", "MD"];
+  const code = ["JS", "TS", "TSX", "JSX", "PY", "GO", "RS", "JSON"];
+  const archives = ["ZIP", "RAR", "TAR", "GZ", "7Z"];
+  if (images.includes(ext)) return "bg-[#6EC1FF]";
+  if (videos.includes(ext)) return "bg-[#FF6FA5]";
+  if (docs.includes(ext)) return "bg-[#FFD400]";
+  if (code.includes(ext)) return "bg-[#A3FF66]";
+  if (archives.includes(ext)) return "bg-[#FFD400]";
+  return "bg-[#FFF8E7]";
 }
 
 export function FileCard({ file, iv, ivkey, token, linkId, onDeleted }: FileCardProps) {
@@ -137,11 +137,15 @@ export function FileCard({ file, iv, ivkey, token, linkId, onDeleted }: FileCard
     <NBCard color="white" className="p-4 flex flex-col gap-3">
       {/* File info */}
       <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-lg border-2 border-black flex items-center justify-center flex-shrink-0 ${getExtColor(ext)}`}>
+        <div
+          className={`w-10 h-10 rounded-lg border-2 border-black flex items-center justify-center flex-shrink-0 ${getExtColor(ext)}`}
+        >
           <span className="text-[9px] font-extrabold font-mono text-black">{ext}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-black truncate" title={file.name}>{file.name}</p>
+          <p className="text-sm font-bold text-black truncate" title={file.name}>
+            {file.name}
+          </p>
           <p className="text-xs text-black/60 mt-0.5 font-medium">{filesize(file.size)}</p>
         </div>
 
@@ -155,7 +159,11 @@ export function FileCard({ file, iv, ivkey, token, linkId, onDeleted }: FileCard
           </button>
 
           {menuOpen && (
-            <NBCard color="white" shadow="sm" className="absolute right-0 top-full mt-1 w-36 z-10 overflow-hidden">
+            <NBCard
+              color="white"
+              shadow="sm"
+              className="absolute right-0 top-full mt-1 w-36 z-10 overflow-hidden"
+            >
               <button
                 onClick={() => {
                   setMenuOpen(false);
@@ -191,26 +199,40 @@ export function FileCard({ file, iv, ivkey, token, linkId, onDeleted }: FileCard
         <button
           onClick={handleTogglePreview}
           disabled={isProcessing && !decryptedUrl}
-          className={nbButtonClass({ color: 'white', size: 'sm', className: 'flex-1 gap-1.5 py-2 px-3' })}
+          className={nbButtonClass({
+            color: "white",
+            size: "sm",
+            className: "flex-1 gap-1.5 py-2 px-3",
+          })}
         >
           {isProcessing && !decryptedUrl ? (
             <Spinner size={13} color="black" />
           ) : showPreview ? (
-            <><EyeOff size={13} /> Hide</>
+            <>
+              <EyeOff size={13} /> Hide
+            </>
           ) : (
-            <><Eye size={13} /> Preview</>
+            <>
+              <Eye size={13} /> Preview
+            </>
           )}
         </button>
 
         <button
           onClick={handleDownload}
           disabled={isProcessing}
-          className={nbButtonClass({ color: 'yellow', size: 'sm', className: 'flex-1 gap-1.5 py-2 px-3' })}
+          className={nbButtonClass({
+            color: "yellow",
+            size: "sm",
+            className: "flex-1 gap-1.5 py-2 px-3",
+          })}
         >
           {isProcessing ? (
             <Spinner size={13} color="black" />
           ) : (
-            <><Download size={13} /> Download</>
+            <>
+              <Download size={13} /> Download
+            </>
           )}
         </button>
       </div>

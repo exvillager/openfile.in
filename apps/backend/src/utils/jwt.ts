@@ -1,6 +1,9 @@
 import * as jwt from "jsonwebtoken";
 
-export interface JwtToken { id: string|number; [key: string]: any; }
+export interface JwtToken {
+  id: string | number;
+  [key: string]: any;
+}
 
 export function verifyToken(token: string): JwtToken {
   if (token.startsWith("Bearer ")) token = token.slice(7);

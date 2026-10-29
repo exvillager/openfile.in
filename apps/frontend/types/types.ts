@@ -1,7 +1,7 @@
 export interface LinkItem {
   id: string;
   iv: string;
-  name?:string,
+  name?: string;
   maxUploads: number;
   secretKey: number;
   token: string;
@@ -13,26 +13,26 @@ export interface LinkItem {
 }
 
 export interface FileItem {
-  createdAt: string
-  id: string
+  createdAt: string;
+  id: string;
   name: string;
-  iv: string
-  keyUsed: boolean
-  size:number
-  updatedAt:string
-  uploadLinkId: string
-  url: string
-  userId: string
+  iv: string;
+  keyUsed: boolean;
+  size: number;
+  updatedAt: string;
+  uploadLinkId: string;
+  url: string;
+  userId: string;
 }
 
 export interface createLinkArgs {
   payload: CreateLinkPayload;
   secretKey: string;
-  iv: string
+  iv: string;
 }
 
 export interface CreateLinkPayload {
   maxUploads: number;
   allowedFileType?: string[];
-  expiresAt?: string; 
+  expiresAt?: string;
 }

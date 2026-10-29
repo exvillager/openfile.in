@@ -1,20 +1,16 @@
 import { IMailer } from "../interface/mailer.interface";
 import { INotification } from "../interface/notification.interface";
 
-
 export default class NotificationService implements INotification {
   private static instance: NotificationService;
   constructor(private mailer: IMailer) {}
 
   static getInstance(mailer: IMailer) {
     if (!NotificationService.instance) {
-      NotificationService.instance = new NotificationService(mailer)
+      NotificationService.instance = new NotificationService(mailer);
     }
-    return NotificationService.instance
+    return NotificationService.instance;
   }
-
-
-
 
   async sendWelcomeEmail(email: string): Promise<void> {
     const subject = `👋 Welcome`;
@@ -29,11 +25,15 @@ export default class NotificationService implements INotification {
         </div>
       `;
     const isSuccessfull = await this.mailer.sendMail({ to: email, subject, html });
-    if (!isSuccessfull) false
+    if (!isSuccessfull) false;
   }
 
   // send email to user who bough our paid pro subscription
-  async sendSubscriptionSuccessEmail(email: string, amount: number, currency: string): Promise<boolean> {
+  async sendSubscriptionSuccessEmail(
+    email: string,
+    amount: number,
+    currency: string,
+  ): Promise<boolean> {
     const subject = `Subscription Activated - Welcome to Pro Plan`;
     const html = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; background-color: #f9f9f9;">
@@ -52,7 +52,7 @@ export default class NotificationService implements INotification {
   `;
 
     const isSuccessfull = await this.mailer.sendMail({ to: email, subject, html });
-    if (!isSuccessfull) return false
-    return true
+    if (!isSuccessfull) return false;
+    return true;
   }
 }

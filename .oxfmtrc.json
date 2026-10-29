@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.react-router/**",
+    "apps/frontend/build/**",
+    "apps/backend/dist/**",
+    "apps/backend/drizzle/**",
+    "apps/api-go/**",
+    "**/*.json",
+    "**/*.jsonc",
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.md",
+    "**/*.css",
+    "**/*.html",
+    "**/*.webmanifest"
+  ]
+}

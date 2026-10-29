@@ -1,0 +1,53 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "typescript", "unicorn"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "import/no-unassigned-import": "off",
+    "no-unused-vars": "warn",
+    "no-unused-expressions": "warn",
+    "no-unreachable": "warn",
+    "unicorn/no-empty-file": "warn",
+    "import/default": "warn"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.react-router/**",
+    "apps/frontend/build/**",
+    "apps/backend/dist/**",
+    "apps/backend/drizzle/**",
+    "apps/api-go/**"
+  ],
+  "overrides": [
+    {
+      "files": ["apps/frontend/**/*.{ts,tsx,jsx}"],
+      "plugins": ["react", "jsx-a11y"],
+      "env": {
+        "browser": true
+      },
+      "rules": {
+        "react/react-in-jsx-scope": "off",
+        "react/purity": "warn",
+        "react/set-state-in-effect": "warn",
+        "react-hooks/exhaustive-deps": "warn",
+        "jsx-a11y/label-has-associated-control": "warn",
+        "jsx-a11y/no-static-element-interactions": "warn",
+        "jsx-a11y/click-events-have-key-events": "warn",
+        "jsx-a11y/control-has-associated-label": "warn",
+        "jsx-a11y/prefer-tag-over-role": "warn",
+        "jsx-a11y/no-autofocus": "warn"
+      }
+    }
+  ]
+}

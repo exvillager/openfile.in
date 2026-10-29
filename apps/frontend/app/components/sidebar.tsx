@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { Link, NavLink } from 'react-router'
-import { FiHome, FiChevronDown, FiMenu, FiLink, FiX } from 'react-icons/fi'
-import { useAuth } from '~/zustand/store';
-import SidebarDropdown from './sidebar-dropdown';
-import OpenfileLogo from './openfile-logo';
-import { NBBadge, nbBorderThin, nbShadowSm } from './ui/neobrutal';
+import { useState } from "react";
+import { Link, NavLink } from "react-router";
+import { FiHome, FiChevronDown, FiMenu, FiLink, FiX } from "react-icons/fi";
+import { useAuth } from "~/zustand/store";
+import SidebarDropdown from "./sidebar-dropdown";
+import OpenfileLogo from "./openfile-logo";
+import { NBBadge, nbBorderThin, nbShadowSm } from "./ui/neobrutal";
 
 const Tabs = [
   { name: "Create Link", path: "/dashboard", icon: <FiHome size={15} /> },
@@ -16,7 +16,7 @@ export default function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const user = useAuth.getState().user;
-  const planName = user?.subscription?.planName || 'free';
+  const planName = user?.subscription?.planName || "free";
 
   return (
     <>
@@ -35,7 +35,7 @@ export default function Sidebar() {
           fixed top-0 left-0 h-screen w-56 z-40
           bg-[#FFF8E7] border-r-[3px] border-black
           transform transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           md:relative md:translate-x-0
         `}
       >
@@ -63,8 +63,8 @@ export default function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-bold transition-colors border-2 ${
                     isActive
-                      ? 'bg-[#FFD400] text-black border-black'
-                      : 'text-black/60 border-transparent hover:bg-white hover:text-black hover:border-black'
+                      ? "bg-[#FFD400] text-black border-black"
+                      : "text-black/60 border-transparent hover:bg-white hover:text-black hover:border-black"
                   }`
                 }
               >
@@ -77,8 +77,8 @@ export default function Sidebar() {
 
         <div className="p-4">
           <div className="mb-2 px-1">
-            <NBBadge color={planName === 'pro' ? 'yellow' : 'blue'} className="text-[11px]">
-              {planName === 'pro' ? 'Pro plan' : 'Free plan'}
+            <NBBadge color={planName === "pro" ? "yellow" : "blue"} className="text-[11px]">
+              {planName === "pro" ? "Pro plan" : "Free plan"}
             </NBBadge>
           </div>
 
@@ -88,15 +88,20 @@ export default function Sidebar() {
           >
             <button className="flex items-center gap-2.5 w-full">
               <img
-                src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'U')}&background=FFD400&color=111111`}
+                src={
+                  user?.avatar ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "U")}&background=FFD400&color=111111`
+                }
                 alt="avatar"
                 className="w-7 h-7 rounded-full object-cover flex-shrink-0 border-2 border-black"
                 referrerPolicy="no-referrer"
               />
-              <span className="text-sm text-black font-bold truncate flex-1 text-left">{user?.name || "User"}</span>
+              <span className="text-sm text-black font-bold truncate flex-1 text-left">
+                {user?.name || "User"}
+              </span>
               <FiChevronDown
                 size={13}
-                className={`text-black flex-shrink-0 transform transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+                className={`text-black flex-shrink-0 transform transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
               />
             </button>
             {dropdownOpen && <SidebarDropdown />}

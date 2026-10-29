@@ -16,9 +16,7 @@ function TabIcon({
   color: string;
 }) {
   return (
-    <View
-      style={[styles.iconContainer, focused && styles.iconContainerFocused]}
-    >
+    <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
       <AntDesign name={name} size={20} color={color} />
     </View>
   );

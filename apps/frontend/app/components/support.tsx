@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router';
+import React from "react";
+import { Link } from "react-router";
 
 export default function SupportPage() {
   return (
@@ -7,10 +7,7 @@ export default function SupportPage() {
       <span className="text-center">
         Support OpenFile – Your donation keeps this service free and alive.
       </span>
-      <Link
-        to="/support"
-        className="underline font-semibold hover:text-yellow-800 transition"
-      >
+      <Link to="/support" className="underline font-semibold hover:text-yellow-800 transition">
         Donate Now →
       </Link>
     </div>

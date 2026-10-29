@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Share,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, Share, Alert, ActivityIndicator } from "react-native";
 import Input from "@/src/components/input";
 import Button from "@/src/components/button";
 import Toggle from "@/src/components/toggle";
@@ -86,9 +79,7 @@ export default function CreateLinkScreen() {
   return (
     <ScreenView>
       <ScrollView className="flex-1 px-5" keyboardShouldPersistTaps="handled">
-        <Text className="text-2xl font-bold text-zinc-100 mt-6 mb-1">
-          Create Secure Link
-        </Text>
+        <Text className="text-2xl font-bold text-zinc-100 mt-6 mb-1">Create Secure Link</Text>
         <Text className="text-zinc-400 mb-6">
           Generate an encrypted upload link to privately receive files.
         </Text>
@@ -139,9 +130,7 @@ export default function CreateLinkScreen() {
           />
         </View>
 
-        {error && (
-          <Text className="text-red-400 mb-4 text-sm">{error.message}</Text>
-        )}
+        {error && <Text className="text-red-400 mb-4 text-sm">{error.message}</Text>}
 
         <Button
           title={isPending ? "Generating..." : "Generate Link"}
@@ -150,9 +139,7 @@ export default function CreateLinkScreen() {
           className="w-full mb-6"
         />
 
-        {isPending && (
-          <ActivityIndicator className="mb-4" color={COLORS.brand} />
-        )}
+        {isPending && <ActivityIndicator className="mb-4" color={COLORS.brand} />}
 
         {generatedLink ? (
           <View className="bg-zinc-900 rounded-xl p-4 mb-8">
@@ -162,18 +149,11 @@ export default function CreateLinkScreen() {
             <Text className="text-zinc-300 text-sm mb-4" numberOfLines={3}>
               {generatedLink}
             </Text>
-            <Button
-              title="Share Link"
-              variant="outline"
-              onPress={handleShare}
-              className="w-full"
-            />
+            <Button title="Share Link" variant="outline" onPress={handleShare} className="w-full" />
           </View>
         ) : (
           <View className="bg-zinc-900 rounded-xl p-6 items-center mb-8">
-            <Text className="text-zinc-500 text-sm">
-              Your generated link will appear here.
-            </Text>
+            <Text className="text-zinc-500 text-sm">Your generated link will appear here.</Text>
           </View>
         )}
       </ScrollView>

@@ -1,10 +1,10 @@
-import { Github, Shield } from 'lucide-react';
-import React from 'react';
-import { Link } from 'react-router';
-import OpenfileLogo from './openfile-logo';
-import { nbBorderThin, nbPress, nbShadowSm, NBBadge } from './ui/neobrutal';
+import { Github, Shield } from "lucide-react";
+import React from "react";
+import { Link } from "react-router";
+import OpenfileLogo from "./openfile-logo";
+import { nbBorderThin, nbPress, nbShadowSm, NBBadge } from "./ui/neobrutal";
 
-const GITHUB_REPO_URL = 'https://github.com/exvillager/openfile.in';
+const GITHUB_REPO_URL = "https://github.com/exvillager/openfile.in";
 
 function Footer() {
   return (
@@ -17,7 +17,8 @@ function Footer() {
               <span className="text-sm font-extrabold text-black">OpenFile</span>
             </Link>
             <p className="text-black/60 text-sm leading-relaxed max-w-xs mb-4 font-medium">
-              Secure, zero-knowledge file receiving. Your files are encrypted before they leave the sender's device.
+              Secure, zero-knowledge file receiving. Your files are encrypted before they leave the
+              sender's device.
             </p>
             <a
               href="mailto:exvillagerbgs@gmail.com"
@@ -28,30 +29,44 @@ function Footer() {
           </div>
 
           <div>
-            <h4 className="text-xs font-extrabold text-black uppercase tracking-widest mb-4">Product</h4>
+            <h4 className="text-xs font-extrabold text-black uppercase tracking-widest mb-4">
+              Product
+            </h4>
             <ul className="space-y-2.5">
               {[
-                { label: 'Features', href: '#features' },
-                { label: 'Security', href: '/privacy-policy/#security' },
-                { label: 'Dashboard', href: '/dashboard' },
-              ].map(l => (
+                { label: "Features", href: "#features" },
+                { label: "Security", href: "/privacy-policy/#security" },
+                { label: "Dashboard", href: "/dashboard" },
+              ].map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className="text-sm text-black/70 hover:text-black font-medium transition-colors">{l.label}</a>
+                  <a
+                    href={l.href}
+                    className="text-sm text-black/70 hover:text-black font-medium transition-colors"
+                  >
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-xs font-extrabold text-black uppercase tracking-widest mb-4">Legal</h4>
+            <h4 className="text-xs font-extrabold text-black uppercase tracking-widest mb-4">
+              Legal
+            </h4>
             <ul className="space-y-2.5">
               {[
-                { label: 'Privacy Policy', href: '/privacy-policy' },
-                { label: 'Contact', href: '/privacy-policy/#contact' },
-                { label: 'Help Center', href: '/privacy-policy/' },
-              ].map(l => (
+                { label: "Privacy Policy", href: "/privacy-policy" },
+                { label: "Contact", href: "/privacy-policy/#contact" },
+                { label: "Help Center", href: "/privacy-policy/" },
+              ].map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className="text-sm text-black/70 hover:text-black font-medium transition-colors">{l.label}</a>
+                  <a
+                    href={l.href}
+                    className="text-sm text-black/70 hover:text-black font-medium transition-colors"
+                  >
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>

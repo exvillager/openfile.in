@@ -70,9 +70,7 @@ export default function FilesListHeader({
         </View>
       )}
 
-      {isError && (
-        <Text className="text-red-400 text-sm mb-4">{errorMessage}</Text>
-      )}
+      {isError && <Text className="text-red-400 text-sm mb-4">{errorMessage}</Text>}
     </View>
   );
 }
