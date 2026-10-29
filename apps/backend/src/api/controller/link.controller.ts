@@ -26,7 +26,7 @@ export default class DieselLinkController {
       const body = await c.body;
       const result = createLinkSchema.safeParse(body);
       if (!result.success) {
-        const message = result.error.errors[0].message;
+        const message = result.error.issues[0].message;
         return c.json({ error: message }, 400);
       }
       const apiResponse: any = await this.linkService.GenerateLinkForUpload(user, result.data);
