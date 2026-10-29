@@ -10,7 +10,7 @@ export const UPLOAD_URL_TTL = 3600;
 // Hard upper bound on a single upload's size, in bytes. The presigned URL pins
 // content-length to exactly this value, so without a ceiling a caller could
 // reserve an arbitrarily huge object (storage/cost abuse). Tune as needed.
-export const MAX_UPLOAD_FILE_SIZE = 5 * 1024 * 1024 * 1024; // 5 GiB
+export const MAX_UPLOAD_FILE_SIZE = 1 * 1024 * 1024 * 1024; // 1 GiB
 
 // Grace period added on top of UPLOAD_URL_TTL before a still-PENDING File row is
 // treated as abandoned. Covers a slow upload that started just before the URL expired.
