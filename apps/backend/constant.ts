@@ -4,6 +4,10 @@ export const WINDOW = parseInt(process.env.UPLOAD_RATE_WINDOW) || 60;
 export const REFRESH_TOKEN_RATE_LIMIT = parseInt(process.env.REFRESH_TOKEN_RATE_LIMIT) || 10;
 export const REFRESH_TOKEN_RATE_WINDOW = parseInt(process.env.REFRESH_TOKEN_RATE_WINDOW) || 60;
 
+// Brute-force protection for credential endpoints (login/signup), per client IP.
+export const AUTH_RATE_LIMIT = parseInt(process.env.AUTH_RATE_LIMIT) || 10;
+export const AUTH_RATE_WINDOW = parseInt(process.env.AUTH_RATE_WINDOW) || 60;
+
 // How long a presigned upload URL stays valid, in seconds.
 export const UPLOAD_URL_TTL = 3600;
 

@@ -7,6 +7,31 @@ import { diesel_link_router } from "@/api/routes/link.routes";
 import { diesel_file_router } from "@/api/routes/file.routes";
 import { CONFIG } from "@/config";
 
+// Turns a raw request URL into a low-cardinality, secret-free metric label.
+// Drops the query string (upload/validate endpoints carry `?token=...`, which
+// must never land in the publicly scrapable /metrics) and collapses dynamic
+// path segments (ids, uuids, tokens) so the label set stays bounded.
+function metricsPath(rawUrl: string): string {
+  let path = rawUrl;
+  try {
+    path = new URL(rawUrl, "http://local").pathname;
+  } catch {
+    path = rawUrl.split("?")[0];
+  }
+  return (
+    path
+      .split("/")
+      .map((seg) => {
+        if (!seg) return seg;
+        if (/^\d+$/.test(seg)) return ":id";
+        if (/^[0-9a-fA-F-]{16,}$/.test(seg)) return ":id";
+        if (seg.length > 24) return ":token";
+        return seg;
+      })
+      .join("/") || "/"
+  );
+}
+
 export function createApp() {
   const app = new Diesel({});
   app.useLogger(logger);
@@ -27,8 +52,9 @@ export function createApp() {
     .addHooks("onSend", async (ctx, res) => {
       if (!res) return;
       const duration = (Date.now() - (ctx.get<number>("_start") ?? Date.now())) / 1000;
-      httpRequestsCounter.labels(ctx.req.method, ctx.req.url, res.status.toString()).inc();
-      httpResponseTime.labels(ctx.req.method, ctx.req.url, res.status.toString()).observe(duration);
+      const path = metricsPath(ctx.req.url);
+      httpRequestsCounter.labels(ctx.req.method, path, res.status.toString()).inc();
+      httpResponseTime.labels(ctx.req.method, path, res.status.toString()).observe(duration);
     })
 
     // Security headers
