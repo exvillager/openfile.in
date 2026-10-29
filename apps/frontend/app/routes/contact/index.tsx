@@ -1,7 +1,7 @@
-import { Mail, Shield } from 'lucide-react';
-import Header from '~/components/header';
-import Footer from '~/components/footer';
-import { NBCard } from '~/components/ui/neobrutal';
+import { Mail, Shield } from "lucide-react";
+import Header from "~/components/header";
+import Footer from "~/components/footer";
+import { NBCard } from "~/components/ui/neobrutal";
 
 function ContactPage() {
   return (

@@ -1,19 +1,27 @@
 {
   "name": "openfile",
-  "license": "AGPL-3.0",
   "version": "0.0.25",
   "private": true,
-  "scripts": {
-    "dev": "bun run --filter=backend dev & bun run --filter=frontend dev",
-    "start": "bun run --filter=backend start & bun run --filter=frontend start",
-    "build": "bun run --filter=frontend build",
-    "mobile": "bun --cwd apps/mobile run start"
-  },
+  "license": "AGPL-3.0",
   "workspaces": [
     "apps/backend",
     "apps/frontend"
   ],
+  "scripts": {
+    "dev": "bun run --filter=backend dev & bun run --filter=frontend dev",
+    "start": "bun run --filter=backend start & bun run --filter=frontend start",
+    "build": "bun run --filter=frontend build",
+    "mobile": "bun --cwd apps/mobile run start",
+    "lint": "oxlint apps/backend apps/frontend apps/mobile",
+    "lint:fix": "oxlint --fix apps/backend apps/frontend apps/mobile",
+    "fmt": "oxfmt apps/backend apps/frontend apps/mobile",
+    "fmt:check": "oxfmt --check apps/backend apps/frontend apps/mobile"
+  },
   "dependencies": {
     "@types/node": "^24.9.1"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.90.0"
   }
 }

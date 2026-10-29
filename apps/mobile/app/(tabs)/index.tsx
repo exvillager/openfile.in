@@ -1,7 +1,5 @@
-import CreateLinkScreen from './create-link'
+import CreateLinkScreen from "./create-link";
 
 export default function Index() {
-    return (
-    <CreateLinkScreen />
-  )
+  return <CreateLinkScreen />;
 }

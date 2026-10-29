@@ -1,33 +1,17 @@
-import { redis } from "@/config/redis";
-import { cleanupService } from "@/container";
-import { startServer } from "./serve";
+// Entry point. Starts WORKERS copies of the server (default 2, hard cap 2) so both cores are used.
+// Each copy is a separate process listening on the same port via SO_REUSEPORT (see serve.ts).
+// WORKERS=1 runs a single process with no supervisor (local dev, tests).
+const MAX_WORKERS = 2;
+const requested = parseInt(process.env.WORKERS ?? "", 10);
+const workers = Math.min(
+  MAX_WORKERS,
+  Math.max(1, Number.isNaN(requested) ? MAX_WORKERS : requested),
+);
 
-export async function pushPendingFilesToQueue() {
-    await cleanupService.requeuePendingAndFailedFiles();
+if (workers > 1 && process.env.OPENFILE_WORKER === undefined) {
+  // supervisor: does not load the app, so no DB/Redis connections or background jobs here
+  const { runSupervisor } = await import("./supervisor");
+  runSupervisor(workers);
+} else {
+  await import("./worker");
 }
-
-if (process.env.NODE_ENV === "development") {
-    await redis.flushall();
-    await redis.flushdb();
-}
-
-// 1. Start BullMQ background worker for file deletion jobs
-cleanupService.run_delete_file_worker();
-
-// 2. Schedule periodic task intervals (with distributed locking)
-cleanupService.runLinkCleanupInterval(process.env.CLEANUP_INTERVAL ?? "10m");
-cleanupService.runFileRecoveryInterval(process.env.FILE_RECOVERY_INTERVAL ?? "10m");
-cleanupService.runAbondonedFilesCleanupInterval(process.env.ABANDONED_FILES_CLEANUP_INTERVAL ?? "10m");
-
-// 3. Instant recovery check on server boot
-cleanupService.requeuePendingAndFailedFiles()
-    .catch(err => console.error("[Recovery] Failed initial requeue on startup:", err));
-
-cleanupService.cleanAbondonedExpiredFiles()
-    .catch(err => console.error("[Cleanup] Failed initial abondoned files cleanup on startup:", err));
-
-startServer()
-    .catch(err => {
-        console.error('[Server] Failed to start:', err);
-        process.exit(1);
-    });

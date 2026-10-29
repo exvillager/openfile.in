@@ -1,5 +1,14 @@
 import { useRef, useState } from "react";
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, ActivityIndicator, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  TextInput,
+} from "react-native";
 import { router } from "expo-router";
 import { COLORS } from "@/src/constant";
 import ScreenView from "@/src/components/safe-area-view-component";
@@ -15,7 +24,9 @@ export default function AuthScreen() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ username?: string; email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ username?: string; email?: string; password?: string }>(
+    {},
+  );
 
   const { mutate: login, isPending: loginPending, error: loginError } = useLogin();
   const { mutate: register, isPending: registerPending, error: registerError } = useRegister();
@@ -49,13 +60,15 @@ export default function AuthScreen() {
   return (
     <ScreenView>
       <KeyboardAvoidingView
-        style={{flex:1}}
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View className="flex-1 justify-center px-6">
             <Text className="text-3xl font-bold text-zinc-100 mb-2">OpenFile</Text>
-            <Text className="text-zinc-400 mb-8">The private way to receive files from anyone.</Text>
+            <Text className="text-zinc-400 mb-8">
+              The private way to receive files from anyone.
+            </Text>
 
             {/* Tab toggle */}
             <View className="flex-row bg-zinc-900 rounded-xl p-1 mb-8">
@@ -66,7 +79,9 @@ export default function AuthScreen() {
                   onPress={() => switchTab(t)}
                   className={`flex-1 py-2 rounded-lg items-center ${tab === t ? "bg-indigo-600" : ""}`}
                 >
-                  <Text className={`font-semibold text-sm ${tab === t ? "text-white" : "text-zinc-400"}`}>
+                  <Text
+                    className={`font-semibold text-sm ${tab === t ? "text-white" : "text-zinc-400"}`}
+                  >
                     {t === "login" ? "Sign In" : "Register"}
                   </Text>
                 </TouchableOpacity>
@@ -97,9 +112,7 @@ export default function AuthScreen() {
               onSubmitEditing={handleSubmit}
             />
 
-            {apiError && (
-              <Text className="text-red-400 mb-4 text-sm">{apiError.message}</Text>
-            )}
+            {apiError && <Text className="text-red-400 mb-4 text-sm">{apiError.message}</Text>}
 
             <Button
               title={isPending ? "Please wait..." : tab === "login" ? "Sign In" : "Create Account"}

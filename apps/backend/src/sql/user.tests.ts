@@ -11,13 +11,12 @@
 // let testUser: {
 //     id: number,
 //     name: string
-// } 
+// }
 
 // beforeAll(async () => {
 //     // await rawSqlPool.query(`DELETE FROM "Subscription"`);
 //     // await rawSqlPool.query(`DELETE FROM "User"`);
 // })
-
 
 // describe('user raw sql test', () => {
 //     // it('', async () => {
