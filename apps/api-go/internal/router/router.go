@@ -40,10 +40,18 @@ func newRouter() *nanoserve.NanoServe {
 // Middlewares groups the middleware the router attaches to routes.
 type Middlewares struct {
 	RequireAuth nanoserve.HandlerFunction
+	// CORS is applied globally (including preflight OPTIONS) when set.
+	CORS nanoserve.HandlerFunction
 }
 
 func New(c Controllers, m Middlewares) *nanoserve.NanoServe {
 	app := newRouter()
+
+	// Global CORS runs before route matching so preflight OPTIONS on any path
+	// (matched or not) gets the right headers.
+	if m.CORS != nil {
+		app.Use(m.CORS)
+	}
 
 	app.GET("/health", c.Health.Check)
 

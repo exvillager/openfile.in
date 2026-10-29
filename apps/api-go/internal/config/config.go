@@ -13,6 +13,10 @@ type Config struct {
 	Port        string
 	DatabaseURL string
 
+	// CORSOrigins is a comma separated list of allowed origins, matching the
+	// Node backend's CORS_ORIGINS. Empty means public CORS without credentials.
+	CORSOrigins string
+
 	AccessTokenSecret  string
 	AccessTokenExpiry  time.Duration
 	RefreshTokenSecret string
@@ -38,6 +42,8 @@ func Load() *Config {
 	return &Config{
 		Port:        port,
 		DatabaseURL: mustGet("DATABASE_URL"),
+
+		CORSOrigins: getEnv("CORS_ORIGINS"),
 
 		AccessTokenSecret:  mustGet("ACCESS_TOKEN_SECRET"),
 		AccessTokenExpiry:  mustDuration("ACCESS_TOKEN_EXPIRY"),

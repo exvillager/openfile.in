@@ -12,7 +12,7 @@ behaviour lives in `apps/backend/src`, so the Go version can match it.
 - [x] Local Postgres + MinIO (`compose.local.yml`, ports 5434 / 9100)
 - [x] Error handler (`ApiError` → JSON) for app and sub-routers
 - [x] `GET /health`
-- [ ] CORS (allowed origins + credentials), like `app.ts`
+- [x] CORS (allowed origins + credentials), like `app.ts`
 - [ ] Request logging
 - [ ] Prometheus `/metrics`, like `app.ts`
 - [ ] Graceful shutdown

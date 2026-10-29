@@ -10,6 +10,7 @@ import (
 	"github.com/exvillager/openfile.in/internal/middleware"
 	"github.com/exvillager/openfile.in/internal/router"
 	"github.com/exvillager/openfile.in/internal/service"
+	nsmw "github.com/libsib/nanoserve/middleware"
 )
 
 func main() {
@@ -43,6 +44,13 @@ func main() {
 		File:   controller.NewFileController(service.NewFileService(pool, queries, storageService)),
 	}, router.Middlewares{
 		RequireAuth: middleware.RequireAuth(authService),
+		CORS: nsmw.CORSWithConfig(nsmw.CORSConfig{
+			AllowOrigins: cfg.CORSOrigins,
+			// "*" can't be combined with credentials, so only enable credentials
+			// when explicit origins are configured (matching the Node backend).
+			AllowCredentials: cfg.CORSOrigins != "",
+			MaxAge:           86400,
+		}),
 	})
 
 	log.Printf("listening on :%s", cfg.Port)

@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/joho/godotenv v1.5.1
-	github.com/libsib/nanoserve v0.2.14
+	github.com/libsib/nanoserve v0.2.15
 	golang.org/x/crypto v0.57.0
 )
 
