@@ -1,0 +1,60 @@
+# Local Postgres + MinIO for api-go. Ports are picked so they don't clash with
+# other local projects (5432/5433, 9000/9001).
+# Usage: docker compose -f compose.local.yml up -d
+# Credentials come from .env (gitignored); see .env.sample.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: openfile-go
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d openfile-go"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # S3-compatible storage, standing in for R2 locally.
+  # API on 9100, web console on http://127.0.0.1:9101
+  minio:
+    image: quay.io/minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:?set STORAGE_ACCESS_KEY in .env}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:?set STORAGE_SECRET_KEY in .env}
+    ports:
+      - "127.0.0.1:9100:9000"
+      - "127.0.0.1:9101:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Creates the bucket once MinIO is up, then exits.
+  minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MC_USER: ${STORAGE_ACCESS_KEY}
+      MC_PASS: ${STORAGE_SECRET_KEY}
+      BUCKET: ${STORAGE_BUCKET:?set STORAGE_BUCKET in .env}
+    entrypoint: >
+      sh -c "mc alias set local http://minio:9000 $$MC_USER $$MC_PASS &&
+             mc mb --ignore-existing local/$$BUCKET"
+    restart: "no"
+
+volumes:
+  postgres_data:
+  minio_data:
