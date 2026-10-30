@@ -3,6 +3,8 @@ import * as os from "os";
 
 // Create registry
 const registry = new Registry();
+// with several worker processes each one only reports its own numbers
+registry.setDefaultLabels({ worker: process.env.OPENFILE_WORKER ?? "solo" });
 
 // ===== Gauges ===== //
 
@@ -62,19 +64,14 @@ const computeMetrics = (time = 30 * 1000) => {
     setTimeout(() => eventLoopLagGauge.set(Date.now() - start), 0);
 
     console.log(
-      `[Metrics] CPU:${cpuLoad.toFixed(2)} RSS:${(mem.rss / 1024 / 1024).toFixed(2)}MB HeapUsed:${(mem.heapUsed / 1024 / 1024).toFixed(2)}MB`
+      `[Metrics] CPU:${cpuLoad.toFixed(2)} RSS:${(mem.rss / 1024 / 1024).toFixed(2)}MB HeapUsed:${(mem.heapUsed / 1024 / 1024).toFixed(2)}MB`,
     );
   };
 
-  update();               
+  update();
   setInterval(update, time);
 };
 
 computeMetrics();
 
-
-export {
-  registry,
-  httpRequestsCounter,
-  httpResponseTime,
-};
+export { registry, httpRequestsCounter, httpResponseTime };

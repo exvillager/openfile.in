@@ -41,9 +41,7 @@ interface CreateLinkResponse {
   token: string;
 }
 
-export const createLink = async (
-  payload: CreateLinkPayload,
-): Promise<CreateLinkResponse> => {
+export const createLink = async (payload: CreateLinkPayload): Promise<CreateLinkResponse> => {
   const res = await fetch(`${API_URL}/api/v1/link`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -137,45 +135,30 @@ interface GetUserFilesParams {
   limit: number;
 }
 
-const getUserFiles = async ({
-  link_id,
-  token,
-  page,
-  limit,
-}: GetUserFilesParams) => {
+const getUserFiles = async ({ link_id, token, page, limit }: GetUserFilesParams) => {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
   });
-  const res = await fetch(
-    `${API_URL}/api/v1/file/${link_id}/${token}/files?${params}`,
-    {
-      method: "GET",
-      credentials: "include",
-    },
-  );
+  const res = await fetch(`${API_URL}/api/v1/file/${link_id}/${token}/files?${params}`, {
+    method: "GET",
+    credentials: "include",
+  });
   checkUnauthorized(res);
   let data: any;
   try {
     data = await res.json();
   } catch {
-    throw new Error(
-      "Failed to fetch files: server returned an unexpected response",
-    );
+    throw new Error("Failed to fetch files: server returned an unexpected response");
   }
   if (!res.ok) throw new Error(data?.error || "Failed to fetch files");
   return data as { data: FileItem[]; page: number };
 };
 
-export function useUserFilesQuery(
-  link_id: string,
-  token: string,
-  limit: number,
-) {
+export function useUserFilesQuery(link_id: string, token: string, limit: number) {
   return useInfiniteQuery({
     queryKey: ["files", link_id, token],
-    queryFn: ({ pageParam }) =>
-      getUserFiles({ link_id, token, page: pageParam, limit }),
+    queryFn: ({ pageParam }) => getUserFiles({ link_id, token, page: pageParam, limit }),
     initialPageParam: 1,
     enabled: !!link_id && !!token,
     getNextPageParam: (lastPage) =>

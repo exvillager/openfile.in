@@ -5,15 +5,13 @@ import { useEffect } from "react";
 import Footer from "~/components/footer";
 import { GLOBAL_BG } from "constant";
 
-
-
 const DashboardLayout = () => {
-  const navigate = useNavigate()
-  const user = useAuth.getState().user?.username
+  const navigate = useNavigate();
+  const user = useAuth.getState().user?.username;
 
   useEffect(() => {
-    if (!user) navigate('/auth')
-  }, [])
+    if (!user) navigate("/auth");
+  }, []);
 
   return (
     <div className={`${GLOBAL_BG} text-black`}>
@@ -28,6 +26,5 @@ const DashboardLayout = () => {
     </div>
   );
 };
-
 
 export default DashboardLayout;

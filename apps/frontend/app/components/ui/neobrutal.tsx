@@ -29,10 +29,13 @@ export const nbInputClass =
   "w-full px-4 py-2.5 rounded-lg border-[3px] border-black bg-white text-black placeholder-black/30 text-sm font-medium focus:outline-none focus:bg-[#FFF8E7] transition-colors";
 
 /** Bold uppercase label to pair with nbInputClass. */
-export const nbLabelClass = "block text-xs font-extrabold text-black/70 uppercase tracking-wide mb-1.5";
+export const nbLabelClass =
+  "block text-xs font-extrabold text-black/70 uppercase tracking-wide mb-1.5";
 
 /** Class string for a neobrutal button/CTA — apply to <button>, <Link>, or <a> alike. */
-export function nbButtonClass(opts: { color?: NBColor; size?: "sm" | "md"; className?: string } = {}) {
+export function nbButtonClass(
+  opts: { color?: NBColor; size?: "sm" | "md"; className?: string } = {},
+) {
   const { color = "yellow", size = "md", className } = opts;
   return cn(
     "inline-flex items-center justify-center font-extrabold text-black rounded-lg",
@@ -41,7 +44,7 @@ export function nbButtonClass(opts: { color?: NBColor; size?: "sm" | "md"; class
     nbPress,
     "disabled:opacity-50 disabled:pointer-events-none",
     size === "sm" ? "text-sm px-4 py-1.5" : "text-sm px-7 py-3",
-    className
+    className,
   );
 }
 
@@ -51,7 +54,13 @@ type NBButtonProps = React.ComponentProps<"button"> & {
 };
 
 /** Real <button> element for actions (not navigation) — for links/CTAs use nbButtonClass instead. */
-export function NBButton({ color = "yellow", size = "md", className, style, ...props }: NBButtonProps) {
+export function NBButton({
+  color = "yellow",
+  size = "md",
+  className,
+  style,
+  ...props
+}: NBButtonProps) {
   return (
     <button
       className={nbButtonClass({ color, size, className })}
@@ -68,7 +77,14 @@ type NBCardProps = React.ComponentProps<"div"> & {
 };
 
 /** Bordered, hard-shadowed surface — the base building block for feature blocks, plan cards, list rows, etc. */
-export function NBCard({ color = "white", shadow = "md", as = "div", className, style, ...props }: NBCardProps) {
+export function NBCard({
+  color = "white",
+  shadow = "md",
+  as = "div",
+  className,
+  style,
+  ...props
+}: NBCardProps) {
   const shadowClass = shadow === "sm" ? nbShadowSm : shadow === "lg" ? nbShadowLg : nbShadow;
   const Tag = as as React.ElementType;
   return (
@@ -91,7 +107,7 @@ export function NBBadge({ color = "yellow", className, style, ...props }: NBBadg
       className={cn(
         "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold text-black",
         nbBorderThin,
-        className
+        className,
       )}
       style={{ backgroundColor: NB_COLORS[color], ...style }}
       {...props}

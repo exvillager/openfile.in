@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,15 +19,8 @@ export default function LinkDetailScreen() {
   const [keyInputValue, setKeyInputValue] = useState("");
 
   const queryClient = useQueryClient();
-  const {
-    data,
-    isFetching,
-    isFetchingNextPage,
-    isError,
-    error,
-    fetchNextPage,
-    hasNextPage,
-  } = useUserFilesQuery(id, token, LIMIT);
+  const { data, isFetching, isFetchingNextPage, isError, error, fetchNextPage, hasNextPage } =
+    useUserFilesQuery(id, token, LIMIT);
 
   const files = data?.pages.flatMap((p) => p.data) ?? [];
 
@@ -84,9 +70,7 @@ export default function LinkDetailScreen() {
           className="flex-row items-center bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800"
           style={{ gap: 6 }}
         >
-          <Text className="text-zinc-400 text-sm">
-            {showKeyInput ? "Cancel" : "Add Key/IV"}
-          </Text>
+          <Text className="text-zinc-400 text-sm">{showKeyInput ? "Cancel" : "Add Key/IV"}</Text>
         </TouchableOpacity>
       </View>
 
@@ -96,7 +80,9 @@ export default function LinkDetailScreen() {
         contentContainerStyle={{ padding: 20 }}
         onRefresh={handleRefresh}
         refreshing={isFetching && !isFetchingNextPage}
-        onEndReached={() => { if (hasNextPage && !isFetchingNextPage) fetchNextPage() }}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        }}
         onEndReachedThreshold={0.4}
         ItemSeparatorComponent={() => <View className="h-3" />}
         ListHeaderComponent={
@@ -111,7 +97,9 @@ export default function LinkDetailScreen() {
             onCancelKeyInput={() => setShowKeyInput(false)}
           />
         }
-        renderItem={({ item }) => <FileCard file={item} token={token} linkId={id} encryptionKey={key} iv={iv} />}
+        renderItem={({ item }) => (
+          <FileCard file={item} token={token} linkId={id} encryptionKey={key} iv={iv} />
+        )}
         ListEmptyComponent={
           !isFetching ? (
             <View className="items-center mt-20">

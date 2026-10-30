@@ -1,33 +1,39 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router'
-import { useAuth } from '~/zustand/store'
-import OpenfileLogo from './openfile-logo'
-import { FiMenu, FiX } from 'react-icons/fi'
-import { Github } from 'lucide-react'
-import { nbBorderThin, nbButtonClass, nbPress, nbShadowSm } from './ui/neobrutal'
+import React, { useState } from "react";
+import { Link } from "react-router";
+import { useAuth } from "~/zustand/store";
+import OpenfileLogo from "./openfile-logo";
+import { FiMenu, FiX } from "react-icons/fi";
+import { Github } from "lucide-react";
+import { nbBorderThin, nbButtonClass, nbPress, nbShadowSm } from "./ui/neobrutal";
 
-const GITHUB_REPO_URL = 'https://github.com/exvillager/openfile.in'
+const GITHUB_REPO_URL = "https://github.com/exvillager/openfile.in";
 
 function Header() {
-  const isLoggedIn = useAuth.getState()?.user?.username
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const isLoggedIn = useAuth.getState()?.user?.username;
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
-    { label: 'How it works', href: '#how-it-works' },
-    { label: 'Features', href: '#features' },
-  ]
+    { label: "How it works", href: "#how-it-works" },
+    { label: "Features", href: "#features" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b-[3px] border-black bg-[#FFF8E7]">
       <nav className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <OpenfileLogo />
-          <Link to={'/'} className="text-sm font-extrabold text-black">OpenFile</Link>
+          <Link to={"/"} className="text-sm font-extrabold text-black">
+            OpenFile
+          </Link>
         </div>
 
         <div className="hidden md:flex items-center gap-7">
           {navLinks.map((l) => (
-            <a key={l.label} href={l.href} className="text-sm font-bold text-black/70 hover:text-black transition-colors">
+            <a
+              key={l.label}
+              href={l.href}
+              className="text-sm font-bold text-black/70 hover:text-black transition-colors"
+            >
               {l.label}
             </a>
           ))}
@@ -41,11 +47,11 @@ function Header() {
             <Github size={16} strokeWidth={2.5} />
           </a>
           {isLoggedIn ? (
-            <Link to={'/dashboard'} className={nbButtonClass({ color: 'yellow', size: 'sm' })}>
+            <Link to={"/dashboard"} className={nbButtonClass({ color: "yellow", size: "sm" })}>
               Dashboard
             </Link>
           ) : (
-            <Link to={'/auth'} className={nbButtonClass({ color: 'white', size: 'sm' })}>
+            <Link to={"/auth"} className={nbButtonClass({ color: "white", size: "sm" })}>
               Login
             </Link>
           )}
@@ -83,16 +89,16 @@ function Header() {
           </a>
           {isLoggedIn ? (
             <Link
-              to={'/dashboard'}
-              className={nbButtonClass({ color: 'yellow', size: 'sm', className: 'text-center' })}
+              to={"/dashboard"}
+              className={nbButtonClass({ color: "yellow", size: "sm", className: "text-center" })}
               onClick={() => setMobileOpen(false)}
             >
               Dashboard
             </Link>
           ) : (
             <Link
-              to={'/auth'}
-              className={nbButtonClass({ color: 'white', size: 'sm', className: 'text-center' })}
+              to={"/auth"}
+              className={nbButtonClass({ color: "white", size: "sm", className: "text-center" })}
               onClick={() => setMobileOpen(false)}
             >
               Login
@@ -101,7 +107,7 @@ function Header() {
         </div>
       )}
     </header>
-  )
+  );
 }
 
-export default React.memo(Header)
+export default React.memo(Header);

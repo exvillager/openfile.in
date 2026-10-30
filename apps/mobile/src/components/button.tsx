@@ -32,16 +32,10 @@ const Button: React.FC<ButtonProps> = ({
   }
 
   const textStyle =
-    variant === "outline"
-      ? "text-indigo-400 font-semibold"
-      : "text-white font-semibold";
+    variant === "outline" ? "text-indigo-400 font-semibold" : "text-white font-semibold";
 
   return (
-    <Pressable
-      onPress={onPress}
-      className={`${baseStyle} ${variantStyle} ${className}`}
-      {...props}
-    >
+    <Pressable onPress={onPress} className={`${baseStyle} ${variantStyle} ${className}`} {...props}>
       <Text className={textStyle}>{title}</Text>
     </Pressable>
   );

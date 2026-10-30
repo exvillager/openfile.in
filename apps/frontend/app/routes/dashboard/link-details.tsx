@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router';
-import { useUserFilesQuery } from '~/service/api';
-import type { FileItem } from 'types/types';
-import { FileCard } from '~/components/file-card';
-import Spinner from '~/components/spinner';
-import { toast } from 'sonner';
-import { ArrowLeft, Key, AlertTriangle, Files } from 'lucide-react';
-import { NBCard, nbButtonClass, nbInputClass } from '~/components/ui/neobrutal';
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams, useNavigate } from "react-router";
+import { useUserFilesQuery } from "~/service/api";
+import type { FileItem } from "types/types";
+import { FileCard } from "~/components/file-card";
+import Spinner from "~/components/spinner";
+import { toast } from "sonner";
+import { ArrowLeft, Key, AlertTriangle, Files } from "lucide-react";
+import { NBCard, nbButtonClass, nbInputClass } from "~/components/ui/neobrutal";
 
 function LinkPage() {
   const [searchParams] = useSearchParams();
@@ -14,38 +14,48 @@ function LinkPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [key, setKey] = useState('');
-  const [iv, setIv] = useState('');
+  const [key, setKey] = useState("");
+  const [iv, setIv] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [showKeyIvInput, setShowKeyIvInput] = useState(false);
 
   const page = 1;
   const limit = 50;
 
-  const { data, isError, error, isLoading, refetch } = useUserFilesQuery(id ?? '', token, page, limit);
+  const { data, isError, error, isLoading, refetch } = useUserFilesQuery(
+    id ?? "",
+    token,
+    page,
+    limit,
+  );
   const files = data?.data;
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
     const hashKey = hashParams.get("key");
     const hashIv = hashParams.get("iv");
-    if (hashKey && hashIv) { setKey(hashKey); setIv(hashIv); }
+    if (hashKey && hashIv) {
+      setKey(hashKey);
+      setIv(hashIv);
+    }
   }, []);
 
-  if (isLoading) return (
-    <div className="min-h-screen flex justify-center items-center">
-      <Spinner size={28} color="black" />
-    </div>
-  );
-
-  if (isError) return (
-    <div className="min-h-screen flex justify-center items-center">
-      <div className="text-center">
-        <AlertTriangle className="w-10 h-10 text-red-600 mx-auto mb-3" />
-        <p className="text-red-600 font-bold">{error.message}</p>
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <Spinner size={28} color="black" />
       </div>
-    </div>
-  );
+    );
+
+  if (isError)
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <div className="text-center">
+          <AlertTriangle className="w-10 h-10 text-red-600 mx-auto mb-3" />
+          <p className="text-red-600 font-bold">{error.message}</p>
+        </div>
+      </div>
+    );
 
   const handleKeyIvInput = () => {
     try {
@@ -77,10 +87,10 @@ function LinkPage() {
         </button>
         <button
           onClick={() => setShowKeyIvInput(!showKeyIvInput)}
-          className={nbButtonClass({ color: 'white', size: 'sm', className: 'gap-2' })}
+          className={nbButtonClass({ color: "white", size: "sm", className: "gap-2" })}
         >
           <Key size={14} />
-          {showKeyIvInput ? 'Cancel' : 'Add Backup Key/IV'}
+          {showKeyIvInput ? "Cancel" : "Add Backup Key/IV"}
         </button>
       </div>
 
@@ -88,15 +98,18 @@ function LinkPage() {
       <NBCard color="yellow" className="flex items-start gap-2.5 p-4 mb-6 max-w-3xl">
         <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
         <p className="text-sm text-black font-medium">
-          When you click <strong className="font-extrabold">Decrypt</strong>, the file is downloaded and decrypted in your browser.
-          This may take time depending on file size. Do not close or refresh the tab during decryption.
+          When you click <strong className="font-extrabold">Decrypt</strong>, the file is downloaded
+          and decrypted in your browser. This may take time depending on file size. Do not close or
+          refresh the tab during decryption.
         </p>
       </NBCard>
 
       {/* Key/IV input panel */}
       {showKeyIvInput && (
         <NBCard color="white" className="mb-6 p-5">
-          <p className="text-sm text-black/70 mb-3 font-bold">Paste your backup JSON (with key and iv):</p>
+          <p className="text-sm text-black/70 mb-3 font-bold">
+            Paste your backup JSON (with key and iv):
+          </p>
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -108,13 +121,13 @@ function LinkPage() {
           <div className="flex gap-2 mt-3">
             <button
               onClick={handleKeyIvInput}
-              className={nbButtonClass({ color: 'yellow', size: 'sm' })}
+              className={nbButtonClass({ color: "yellow", size: "sm" })}
             >
               Set Key/IV
             </button>
             <button
               onClick={() => setShowKeyIvInput(false)}
-              className={nbButtonClass({ color: 'white', size: 'sm' })}
+              className={nbButtonClass({ color: "white", size: "sm" })}
             >
               Cancel
             </button>
@@ -133,19 +146,24 @@ function LinkPage() {
                 iv={iv}
                 token={token}
                 ivkey={key}
-                linkId={id ?? ''}
+                linkId={id ?? ""}
                 onDeleted={refetch}
               />
             ))}
           </div>
         </div>
       ) : (
-        <NBCard color="white" className="flex flex-col items-center justify-center py-24 text-center">
+        <NBCard
+          color="white"
+          className="flex flex-col items-center justify-center py-24 text-center"
+        >
           <div className="w-14 h-14 rounded-2xl bg-[#FFF8E7] border-2 border-black flex items-center justify-center mb-4">
             <Files size={22} />
           </div>
           <p className="text-black font-extrabold mb-1">No files uploaded yet</p>
-          <p className="text-black/60 text-sm font-medium">Share the upload link to receive encrypted files.</p>
+          <p className="text-black/60 text-sm font-medium">
+            Share the upload link to receive encrypted files.
+          </p>
         </NBCard>
       )}
     </div>

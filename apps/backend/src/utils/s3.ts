@@ -6,7 +6,6 @@
 // import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 // import { getFolderByMime } from "./helper";
 
-
 // const s3 = new S3Client({
 //     region: process.env.AWS_REGION,
 //     credentials: {
@@ -15,7 +14,6 @@
 //     },
 //     // bucket: process.env.AWS_BUCKET
 // })
-
 
 // export const uploadFileToS3 = async (
 //     file: File,
@@ -45,8 +43,6 @@
 //         throw new Error("Failed to upload file to S3 " + error?.message);
 //     }
 // }
-
-
 
 // export const uploadStreamToS3 = async (
 //     stream: Readable,
@@ -94,7 +90,6 @@
 //     }
 // }
 
-
 // export const generatePresignedUploadUrl = async (mimeType: string)
 //     : Promise<{ url: string; key: string }> => {
 //     const ext = mime.extension(mimeType) || "bin";
@@ -114,7 +109,6 @@
 //         throw error;
 //     }
 // }
-
 
 // export function extractS3KeyFromUrl(url: string): string {
 //     const parsed = new URL(url);
@@ -137,7 +131,7 @@
 // //             console.warn("S3 deletion errors:", res.Errors);
 // //             return false;
 // //         }
-        
+
 // //         return true;
 // //     } catch (error) {
 // //         console.log('error while deleting files from s3', error)

@@ -9,11 +9,8 @@ interface Props {
 }
 
 export default function CreateLinkUnits({ value, onValueChange }: Props) {
-  
   return (
-    <View
-      className="flex-row mb-5 bg-zinc-800 p-1.5 rounded-full"
-    >      
+    <View className="flex-row mb-5 bg-zinc-800 p-1.5 rounded-full">
       {UNITS.map((unit) => (
         <TouchableOpacity
           key={unit}
@@ -24,9 +21,7 @@ export default function CreateLinkUnits({ value, onValueChange }: Props) {
           }`}
         >
           <Text
-            className={`text-sm font-medium ${
-              value === unit ? "text-white" : "text-zinc-400"
-            }`}
+            className={`text-sm font-medium ${value === unit ? "text-white" : "text-zinc-400"}`}
           >
             {unit}
           </Text>

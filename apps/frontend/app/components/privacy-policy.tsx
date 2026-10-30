@@ -1,6 +1,6 @@
-import Header from './header';
-import Footer from './footer';
-import { NBCard } from './ui/neobrutal';
+import Header from "./header";
+import Footer from "./footer";
+import { NBCard } from "./ui/neobrutal";
 
 const PrivacyPolicy = () => {
   return (
@@ -43,20 +43,28 @@ const PrivacyPolicy = () => {
             <h2 className="text-lg font-extrabold mb-3">🔐 Security</h2>
             <ul className="list-disc list-inside space-y-1.5 text-black/80 font-medium text-sm">
               <li>File gets encrypted during upload.</li>
-              <li>We don't store your secret key and IV (it gets stored on your browser locally).</li>
+              <li>
+                We don't store your secret key and IV (it gets stored on your browser locally).
+              </li>
               <li>Files are stored temporarily and deleted after expiry.</li>
               <li>Industry-standard practices ensure data safety.</li>
             </ul>
-            <p className="mt-4 text-black font-extrabold text-sm">Your files = your privacy. Always.</p>
+            <p className="mt-4 text-black font-extrabold text-sm">
+              Your files = your privacy. Always.
+            </p>
           </NBCard>
 
           <NBCard id="contact" color="green" className="p-6">
             <h2 className="text-lg font-extrabold mb-3">📬 Contact</h2>
             <p className="text-black/80 font-medium text-sm">
-              If you have any questions, reach out to us at{' '}
-              <a href="mailto:teamopenfile@gmail.com" className="underline underline-offset-2 font-extrabold">
+              If you have any questions, reach out to us at{" "}
+              <a
+                href="mailto:teamopenfile@gmail.com"
+                className="underline underline-offset-2 font-extrabold"
+              >
                 teamopenfile@gmail.com
-              </a>.
+              </a>
+              .
             </p>
           </NBCard>
         </div>

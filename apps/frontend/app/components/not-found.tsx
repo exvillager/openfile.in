@@ -1,7 +1,7 @@
-import Lottie from 'lottie-react';
-import animationData from 'public/404.json'
-import { Link } from 'react-router';
-import { nbButtonClass } from './ui/neobrutal';
+import Lottie from "lottie-react";
+import animationData from "public/404.json";
+import { Link } from "react-router";
+import { nbButtonClass } from "./ui/neobrutal";
 
 function NotFound() {
   return (
@@ -11,7 +11,7 @@ function NotFound() {
       </div>
       <h1 className="mt-4 text-2xl font-extrabold">Oops! Page not found.</h1>
       <p className="text-black/60 font-medium mb-6">The page you are looking for doesn't exist.</p>
-      <Link to="/" className={nbButtonClass({ color: 'yellow' })}>
+      <Link to="/" className={nbButtonClass({ color: "yellow" })}>
         Back to home
       </Link>
     </div>

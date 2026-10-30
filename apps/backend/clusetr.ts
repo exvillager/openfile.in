@@ -35,7 +35,6 @@
 
 // async function startServer() {
 
-
 //     if (process.env.NODE_ENV === "development") {
 //         await redis.flushall();
 //         await redis.flushdb();

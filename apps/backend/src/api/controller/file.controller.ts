@@ -7,130 +7,146 @@ import { User } from "../../interface/user.interface";
 import { Link } from "../../interface/link.interface";
 import { mustGet } from "../../utils/mustGet";
 
-
 export default class DieselFileController {
-    private static instance: DieselFileController
-    private fileService: IFileService
+  private static instance: DieselFileController;
+  private fileService: IFileService;
 
-    constructor(fileService: IFileService) {
-        this.fileService = fileService
+  constructor(fileService: IFileService) {
+    this.fileService = fileService;
+  }
+
+  static getInstance(fileService: IFileService) {
+    if (!DieselFileController.instance) {
+      DieselFileController.instance = new DieselFileController(fileService);
     }
+    return DieselFileController.instance;
+  }
 
-    static getInstance(fileService: IFileService) {
-        if (!DieselFileController.instance) {
-            DieselFileController.instance = new DieselFileController(fileService)
-        }
-        return DieselFileController.instance;
+  getFilesByLinkToken = async (c: ContextType) => {
+    try {
+      const files = mustGet<any[]>(c, "files");
+      const { page, limit } = mustGet<{ page: number; limit: number }>(c, "pagination");
+
+      const safeFiles = files.map((file: any) => ({
+        ...file,
+        size: Number(file.size),
+      }));
+      return c.json(
+        {
+          message: "Files fetched successfully",
+          success: true,
+          data: safeFiles,
+          page,
+          limit,
+        },
+        200,
+      );
+    } catch (error) {
+      console.error("Error fetching files:", error);
+      return handleErrorResponse(c, error);
     }
+  };
 
+  notifyFileUpload = async (c: ContextType) => {
+    try {
+      const link = mustGet<Link>(c, "link");
 
-    getFilesByLinkToken = async (c: ContextType) => {
-        try {
-            const files = mustGet<any[]>(c, "files");
-            const { page, limit } = mustGet<{ page: number; limit: number }>(c, "pagination");
+      const body = await c.req.json();
+      const parsed = notifyUploadSchema.safeParse(body);
+      if (!parsed.success) {
+        return c.json({ error: parsed.error.format() }, 400);
+      }
 
-            const safeFiles = files.map((file: any) => ({
-                ...file,
-                size: Number(file.size),
-            }));
-            return c.json({
-                message: "Files fetched successfully",
-                success: true,
-                data: safeFiles,
-                page,
-                limit
-            }, 200);
-        } catch (error) {
-            console.error("Error fetching files:", error);
-            return handleErrorResponse(c, error)
-        }
+      const { s3Key, fileSize, name } = parsed.data;
+      if (!s3Key || !fileSize) {
+        return c.json({ error: "Missing required fields" }, 400);
+      }
+
+      const apiResponse: ApiResponse = await this.fileService.notifyUpload({
+        link,
+        s3Key,
+        fileSize,
+        name,
+      });
+      return c.json({ message: apiResponse.message }, apiResponse.statusCode);
+    } catch (error) {
+      console.error("notifyFileUpload error:", error);
+      return handleErrorResponse(c, error);
     }
+  };
 
-    notifyFileUpload = async (c: ContextType) => {
-        try {
-            const link = mustGet<Link>(c, 'link')
+  getUploadPresignedUrl = async (c: ContextType) => {
+    try {
+      const link = mustGet<Link>(c, "link");
+      const safeMimeType = mustGet<string>(c, "mimeType");
+      const fileSize = mustGet<number>(c, "fileSize");
 
-            const body = await c.req.json();
-            const parsed = notifyUploadSchema.safeParse(body)
-            if (!parsed.success) {
-                return c.json({ error: parsed.error.format() }, 400);
-            }
-
-            const { s3Key, fileSize, name } = parsed.data
-            if (!s3Key || !fileSize) {
-                return c.json({ error: 'Missing required fields' }, 400);
-            }
-
-            const apiResponse: ApiResponse = await this.fileService.notifyUpload({ link, s3Key, fileSize, name })
-            return c.json({ message: apiResponse.message }, apiResponse.statusCode)
-        } catch (error) {
-            console.error("notifyFileUpload error:", error);
-            return handleErrorResponse(c, error)
-        }
-    };
-
-
-    getUploadPresignedUrl = async (c: ContextType) => {
-        try {
-            const link = mustGet<Link>(c, 'link')
-            const safeMimeType = mustGet<string>(c, 'mimeType')
-            const fileSize = mustGet<number>(c, 'fileSize')
-
-            const res: ApiResponse = await this.fileService.uploadPreSignedUrl(link, safeMimeType, fileSize)
-            return c.json(res.data, res.statusCode);
-        } catch (error) {
-            console.error("getUploadPresignedUrl error:", error);
-            return handleErrorResponse(c, error)
-        }
+      const res: ApiResponse = await this.fileService.uploadPreSignedUrl(
+        link,
+        safeMimeType,
+        fileSize,
+      );
+      return c.json(res.data, res.statusCode);
+    } catch (error) {
+      console.error("getUploadPresignedUrl error:", error);
+      return handleErrorResponse(c, error);
     }
+  };
 
-    getDownloadPresignedUrl = async (c: ContextType) => {
-        const token = c.query?.token;
-        const fileId = c.query?.fileId
+  getDownloadPresignedUrl = async (c: ContextType) => {
+    const token = c.query?.token;
+    const fileId = c.query?.fileId;
 
-        if (!token|| !fileId) {
-            return c.json({ error: "Missing or invalid parameters" }, 400);
-        }
-        try {
-            const user = mustGet<User>(c, 'user')
-            const apiRespone: ApiResponse = await this.fileService.getDownloadPreSignedUrl(user.id, token, fileId)
-
-            return c.json(apiRespone, apiRespone.statusCode);
-        } catch (error) {
-            console.error("Signed URL error:", error);
-            
-            return handleErrorResponse(c, error)
-        }
+    if (!token || !fileId) {
+      return c.json({ error: "Missing or invalid parameters" }, 400);
     }
+    try {
+      const user = mustGet<User>(c, "user");
+      const apiRespone: ApiResponse = await this.fileService.getDownloadPreSignedUrl(
+        user.id,
+        token,
+        fileId,
+      );
 
-    deleteFileFromLink = async (c: ContextType) => {
-        try {
-            const user = mustGet<User>(c, 'user')
-            const link_id = c.params.id
-            const file_id = c.params.file_id
+      return c.json(apiRespone, apiRespone.statusCode);
+    } catch (error) {
+      console.error("Signed URL error:", error);
 
-            if (!link_id || !file_id) {
-                return c.json({ error: "Missing or invalid parameters" }, 400);
-            }
-
-            const apiResponse: ApiResponse = await this.fileService.delete_a_file_from_a_link(link_id, file_id, user.id)
-            return c.json({ message: apiResponse.message }, apiResponse.statusCode)
-        } catch (error) {
-            console.error("deleteFileFromLink error:", error);
-            return handleErrorResponse(c, error)
-        }
+      return handleErrorResponse(c, error);
     }
+  };
 
-    storeageUsed = async (c: ContextType) => {
-        try {
-            const user = mustGet<User>(c, 'user')
-            const apiRespone = await this.fileService.storageUsed(user.id)
+  deleteFileFromLink = async (c: ContextType) => {
+    try {
+      const user = mustGet<User>(c, "user");
+      const link_id = c.params.id;
+      const file_id = c.params.file_id;
 
-            return c.json(apiRespone, apiRespone.statusCode);
-        } catch (error) {
-            console.error("storage used error:", error);
-            return handleErrorResponse(c, error)
-        }
+      if (!link_id || !file_id) {
+        return c.json({ error: "Missing or invalid parameters" }, 400);
+      }
+
+      const apiResponse: ApiResponse = await this.fileService.delete_a_file_from_a_link(
+        link_id,
+        file_id,
+        user.id,
+      );
+      return c.json({ message: apiResponse.message }, apiResponse.statusCode);
+    } catch (error) {
+      console.error("deleteFileFromLink error:", error);
+      return handleErrorResponse(c, error);
     }
+  };
 
+  storeageUsed = async (c: ContextType) => {
+    try {
+      const user = mustGet<User>(c, "user");
+      const apiRespone = await this.fileService.storageUsed(user.id);
+
+      return c.json(apiRespone, apiRespone.statusCode);
+    } catch (error) {
+      console.error("storage used error:", error);
+      return handleErrorResponse(c, error);
+    }
+  };
 }

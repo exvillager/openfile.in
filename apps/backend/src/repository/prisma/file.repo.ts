@@ -1,15 +1,13 @@
 // import { PrismaClient } from "../generated/prisma";
 // import { IFileRepo } from "../interface/file.interface";
 
-
 // export class FileRepository implements IFileRepo {
 //     private static instance: FileRepository
 //     private client: PrismaClient
 
-//     constructor(client:PrismaClient) { 
+//     constructor(client:PrismaClient) {
 //         this.client=client
 //     }
-
 
 //     static getInstance(client:PrismaClient) {
 //         if (!FileRepository.instance) {
@@ -47,7 +45,6 @@
 //             }
 //         })
 //     }
-
 
 //     createFileAndUpdateLink = async ({ url, name, size }: { url: string, name: string, size: number }, linkId: number, userId: number) => {
 //         return await this.client.$transaction([
