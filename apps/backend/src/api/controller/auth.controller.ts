@@ -7,6 +7,9 @@ import { HTTPException } from "diesel-core/http-exception";
 import { Context, ContextType } from "diesel-core";
 import { mustGet } from "../../utils/mustGet";
 import { User } from "../../interface/user.interface";
+import { cacheService } from "@/container";
+import { verifyToken } from "../../utils/jwt";
+import { invalidateUserCache } from "../../utils/user-cache";
 
 export class DieselAuthController {
   private static instance: DieselAuthController;
@@ -90,6 +93,16 @@ export class DieselAuthController {
 
   logout = async (c: ContextType) => {
     try {
+      // Best-effort: drop the user's cached record on logout so a fresh login
+      // re-reads from the DB instead of a possibly-stale cached entry.
+      try {
+        const token = c.req?.headers.get("Authorization") ?? c.cookies?.accessToken;
+        const decoded = token ? verifyToken(token) : null;
+        if (decoded?.id) await invalidateUserCache(cacheService, decoded.id as string);
+      } catch {
+        // ignore — logout must succeed regardless of cache/token state
+      }
+
       c.setCookie("accessToken", "", accessTokenOptions as any);
       c.setCookie("refreshToken", "", refreshTokenOptions as any);
       return c.json({ message: "User logged out successfully" });

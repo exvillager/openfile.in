@@ -7,6 +7,7 @@ import { ILinkRepo, ILinkService } from "../interface/link.interface";
 import { IDeleteFileRepo } from "../interface/delete-file.interface";
 import { RedisCache } from "./cache.service";
 import { UserWithPlan } from "../interface/user.interface";
+import { invalidateUserCache } from "../utils/user-cache";
 import { CreateLinkBody } from "../zod/schema";
 
 export const planLimits = {
@@ -110,6 +111,10 @@ export default class LinkService implements ILinkService {
     });
 
     if (!link) throw new ApiError("error while creating link", 500);
+
+    // Link creation bumps the user's linkCount / linkCountExpireAt, so the cached
+    // user record is now stale — evict it so the next request reads fresh data.
+    await invalidateUserCache(this.cache, user.id);
 
     return new ApiResponse(201, "link created successfully", {
       id: link.id,

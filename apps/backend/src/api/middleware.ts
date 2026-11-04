@@ -14,6 +14,12 @@ import {
 } from "../../constant";
 import { ContextType } from "diesel-core";
 import { enforceRateLimit, getClientIp } from "../utils/rate-limit";
+import {
+  getCachedUserWithPlan,
+  setCachedUserWithPlan,
+  getCachedUserId,
+  setCachedUserId,
+} from "../utils/user-cache";
 
 export class DieselMiddlewares {
   private static instance: DieselMiddlewares;
@@ -53,7 +59,12 @@ export class DieselMiddlewares {
         });
       }
 
-      const user = await this.userRepository.findUserAndPlanName(decoded.id as string);
+      // Read-through cache: avoid a DB round-trip on every authenticated request.
+      let user = await getCachedUserWithPlan(this.cache, decoded.id as string);
+      if (!user) {
+        user = await this.userRepository.findUserAndPlanName(decoded.id as string);
+        if (user) await setCachedUserWithPlan(this.cache, decoded.id as string, user);
+      }
 
       if (!user) {
         throw new HTTPException(401, {
@@ -193,7 +204,11 @@ export class DieselMiddlewares {
       if (!decoded || !decoded.id)
         throw new HTTPException(401, { message: "Unauthorized", cause: "Invalid token" });
 
-      const user = await this.userRepository.findUserId(decoded.id as string);
+      let user = await getCachedUserId(this.cache, decoded.id as string);
+      if (!user) {
+        user = await this.userRepository.findUserId(decoded.id as string);
+        if (user) await setCachedUserId(this.cache, decoded.id as string, user);
+      }
       if (!user) throw new HTTPException(401, { message: "Unauthorized: User not found" });
 
       c.set("user", user);
@@ -229,7 +244,11 @@ export class DieselMiddlewares {
         REFRESH_TOKEN_RATE_WINDOW,
       );
 
-      const user = await this.userRepository.findUserId(decoded.id as string);
+      let user = await getCachedUserId(this.cache, decoded.id as string);
+      if (!user) {
+        user = await this.userRepository.findUserId(decoded.id as string);
+        if (user) await setCachedUserId(this.cache, decoded.id as string, user);
+      }
       if (!user) throw new HTTPException(401, { message: "Unauthorized: User not found" });
 
       c.set("user", user);

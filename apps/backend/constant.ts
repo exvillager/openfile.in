@@ -11,6 +11,10 @@ export const AUTH_RATE_WINDOW = parseInt(process.env.AUTH_RATE_WINDOW) || 60;
 // How long a presigned upload URL stays valid, in seconds.
 export const UPLOAD_URL_TTL = 3600;
 
+// How long an authenticated user record is cached in Redis (seconds). Kept short
+// so stale plan/linkCount data self-heals quickly even if an eviction is missed.
+export const USER_CACHE_TTL = parseInt(process.env.USER_CACHE_TTL) || 60;
+
 // Hard upper bound on a single upload's size, in bytes. The presigned URL pins
 // content-length to exactly this value, so without a ceiling a caller could
 // reserve an arbitrarily huge object (storage/cost abuse). Tune as needed.

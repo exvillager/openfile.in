@@ -1,6 +1,12 @@
-import { linkRepository, userRepository } from "@/container";
+import { cacheService, linkRepository, userRepository } from "@/container";
 import { ApiError } from "../utils/apiError";
 import { verifyToken } from "../utils/jwt";
+import {
+  getCachedUserWithPlan,
+  setCachedUserWithPlan,
+  getCachedUserId,
+  setCachedUserId,
+} from "../utils/user-cache";
 
 export class MiddlewareService {
   // The constructor can be removed if it's empty and the class only contains static methods.
@@ -14,7 +20,11 @@ export class MiddlewareService {
     const decoded = verifyToken(token);
     if (!decoded?.id) throw new ApiError("Invalid token", 401);
 
-    const user = await userRepository.findUserAndPlanName(decoded.id as string);
+    let user = await getCachedUserWithPlan(cacheService, decoded.id as string);
+    if (!user) {
+      user = await userRepository.findUserAndPlanName(decoded.id as string);
+      if (user) await setCachedUserWithPlan(cacheService, decoded.id as string, user);
+    }
     if (!user) throw new ApiError("User not found", 401);
 
     return user;
@@ -28,7 +38,11 @@ export class MiddlewareService {
     const decoded = verifyToken(token);
     if (!decoded?.id) throw new ApiError("Invalid token", 401);
 
-    const user = await userRepository.findUserId(decoded.id as string);
+    let user = await getCachedUserId(cacheService, decoded.id as string);
+    if (!user) {
+      user = await userRepository.findUserId(decoded.id as string);
+      if (user) await setCachedUserId(cacheService, decoded.id as string, user);
+    }
     if (!user) throw new ApiError("User not found", 401);
 
     return user;
